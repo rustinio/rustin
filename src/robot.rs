@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::rc::Rc;
 
 use futures::stream::iter;
 use futures::{Future, Stream};
@@ -11,15 +11,15 @@ use message::IncomingMessage;
 
 /// The primary entry point for running Rustin.
 pub struct Robot<A> where A: Adapter {
-    adapter: Arc<A>,
+    adapter: Rc<A>,
     config: Config,
-    handlers: Vec<Arc<Handler>>,
+    handlers: Vec<Rc<Handler>>,
 }
 
 impl<A> Robot<A> where A: Adapter {
-    pub fn new(adapter: A, config: Config, handlers: Vec<Arc<Handler>>) -> Self {
+    pub fn new(adapter: A, config: Config, handlers: Vec<Rc<Handler>>) -> Self {
         Robot {
-            adapter: Arc::new(adapter),
+            adapter: Rc::new(adapter),
             config: config,
             handlers: handlers,
         }
@@ -38,9 +38,9 @@ impl<A> Robot<A> where A: Adapter {
     }
 }
 
-fn dispatch<A, H>(adapter: Arc<A>, handlers: Box<H>, message: IncomingMessage)
+fn dispatch<A, H>(adapter: Rc<A>, handlers: Box<H>, message: IncomingMessage)
 -> Box<Stream<Item = (), Error = Error>>
-where A: Adapter, H: Stream<Item = Arc<Handler>, Error = Error> + 'static {
+where A: Adapter, H: Stream<Item = Rc<Handler>, Error = Error> + 'static {
     let results = handlers.and_then(move |handler| {
         let actions = handler.call(message.clone());
 
@@ -50,7 +50,7 @@ where A: Adapter, H: Stream<Item = Arc<Handler>, Error = Error> + 'static {
     Box::new(results)
 }
 
-fn process_actions<A>(adapter: Arc<A>, actions: Box<Stream<Item = Action, Error = Error>>)
+fn process_actions<A>(adapter: Rc<A>, actions: Box<Stream<Item = Action, Error = Error>>)
 -> Box<Future<Item = (), Error = Error>> where A: Adapter {
     let processed_actions = actions.for_each(move |action| {
         match action {

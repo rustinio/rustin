@@ -1,7 +1,7 @@
 extern crate rustin;
 extern crate futures;
 
-use std::sync::Arc;
+use std::rc::Rc;
 
 use futures::stream::once;
 use futures::{Future, Stream};
@@ -34,7 +34,7 @@ impl Handler for Echo {
 fn main() {
     let config = Config;
     let adapter = Shell::new();
-    let robot = Robot::new(adapter, config, vec![Arc::new(Echo)]);
+    let robot = Robot::new(adapter, config, vec![Rc::new(Echo)]);
 
     if let Err(error) = robot.run().wait() {
         println!("ERROR: {}", error);
