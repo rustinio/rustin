@@ -32,7 +32,7 @@ impl Handler for Echo {
 }
 
 fn main() {
-    let config = Config;
+    let config = Config::default();
     let adapter = Shell::new();
     let robot = Robot::new(adapter, config, vec![Rc::new(Echo)]);
 

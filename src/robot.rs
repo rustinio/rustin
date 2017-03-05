@@ -4,16 +4,29 @@ use futures::stream::iter;
 use futures::{Future, Stream};
 
 use adapter::Adapter;
-use config::Config;
 use error::Error;
 use handler::{Action, Handler};
 use message::IncomingMessage;
+
+/// Configuration data for the robot.
+#[derive(Clone, Debug)]
+pub struct Config {
+    pub name: String,
+}
 
 /// The primary entry point for running Rustin.
 pub struct Robot<A> where A: Adapter {
     adapter: Rc<A>,
     config: Config,
     handlers: Vec<Rc<Handler>>,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Config {
+            name: "Rustin".to_string()
+        }
+    }
 }
 
 impl<A> Robot<A> where A: Adapter {
