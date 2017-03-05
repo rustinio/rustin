@@ -1,0 +1,7 @@
+[package]
+authors = ["Jimmy Cuadra <jimmy@jimmycuadra.com>"]
+name = "rustin"
+version = "0.1.0"
+
+[dependencies]
+futures = "0.1.10"
