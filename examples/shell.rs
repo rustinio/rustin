@@ -3,8 +3,8 @@ extern crate futures;
 
 use std::sync::Arc;
 
-use futures::sync::mpsc::channel;
-use futures::{Future, Sink, Stream};
+use futures::stream::once;
+use futures::{Future, Stream};
 use rustin::{
     Action,
     Config,
@@ -22,16 +22,12 @@ struct Echo;
 
 impl Handler for Echo {
     fn call(&self, message: IncomingMessage) -> Box<Stream<Item = Action, Error = Error>> {
-        let (tx, rx) = channel::<Action>(0);
-
         let body = message.body().to_string();
         let user = User::new::<&str, &str>("1", None);
         let target = Target::User(user);
         let outgoing = OutgoingMessage::new(target, body);
 
-        tx.send(Action::SendMessage(outgoing));
-
-        Box::new(rx.map_err(|_| Error))
+        Box::new(once(Ok(Action::SendMessage(outgoing))))
     }
 }
 
