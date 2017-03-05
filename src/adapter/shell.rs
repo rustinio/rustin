@@ -1,4 +1,4 @@
-use std::io::{self, BufRead, Error as IoError};
+use std::io::{self, BufRead};
 use std::thread;
 
 use futures::future::{err, ok};

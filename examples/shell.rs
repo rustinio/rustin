@@ -1,9 +1,10 @@
 extern crate rustin;
 extern crate futures;
 
-use futures::future::ok;
+use std::sync::Arc;
+
 use futures::sync::mpsc::channel;
-use futures::{BoxFuture, Future, Sink, Stream};
+use futures::{Future, Sink, Stream};
 use rustin::{
     Action,
     Config,
@@ -23,21 +24,21 @@ impl Handler for Echo {
     fn call(&self, message: IncomingMessage) -> Box<Stream<Item = Action, Error = Error>> {
         let (tx, rx) = channel::<Action>(0);
 
-        let outgoing = OutgoingMessage {
-            body: message.body().to_string(),
-            target: Target::User(User::new("1", None)),
-        };
+        let body = message.body().to_string();
+        let user = User::new::<&str, &str>("1", None);
+        let target = Target::User(user);
+        let outgoing = OutgoingMessage::new(target, body);
 
         tx.send(Action::SendMessage(outgoing));
 
-        Box::new(rx.then(|result| result.expect("receivers cannot produce errors")))
+        Box::new(rx.map_err(|_| Error))
     }
 }
 
 fn main() {
     let config = Config;
     let adapter = Shell::new();
-    let robot = Robot::new(adapter, config, vec![Echo]);
+    let robot = Robot::new(adapter, config, vec![Arc::new(Echo)]);
 
     if let Err(error) = robot.run().wait() {
         println!("ERROR: {}", error);
