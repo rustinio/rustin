@@ -1,11 +1,13 @@
 use correspondent::{Source, Target};
 
+/// An incoming chat message.
 #[derive(Clone, Debug)]
 pub struct IncomingMessage {
     body: String,
     source: Source,
 }
 
+/// An outgoing chat message.
 #[derive(Clone, Debug)]
 pub struct OutgoingMessage {
     body: String,

@@ -12,6 +12,7 @@ use room::Room;
 use super::Adapter;
 use user::User;
 
+/// An adapter that runs in your shell.
 #[derive(Debug)]
 pub struct Shell;
 

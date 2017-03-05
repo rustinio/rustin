@@ -1,3 +1,4 @@
+/// A user of a chat service.
 #[derive(Clone, Debug)]
 pub struct User {
     id: String,

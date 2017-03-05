@@ -8,6 +8,7 @@ use error::Error;
 use handler::{Action, Handler};
 use message::IncomingMessage;
 
+/// The primary entry point for running Rustin.
 pub struct Robot<A> where A: Adapter {
     adapter: A,
     config: Config,

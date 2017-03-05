@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
+/// An error generated while the robot is running.
 #[derive(Clone, Copy, Debug)]
 pub struct Error;
 
