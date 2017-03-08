@@ -11,23 +11,15 @@ use rustin::{
     Error,
     Handler,
     IncomingMessage,
-    OutgoingMessage,
     Robot,
     Shell,
-    Target,
-    User,
 };
 
 struct Echo;
 
 impl Handler for Echo {
     fn call(&self, message: IncomingMessage) -> Box<Stream<Item = Action, Error = Error>> {
-        let body = message.body().to_string();
-        let user = User::new::<&str, &str>("1", None);
-        let target = Target::User(user);
-        let outgoing = OutgoingMessage::new(target, body);
-
-        Box::new(once(Ok(Action::SendMessage(outgoing))))
+        Box::new(once(Ok(message.reply(message.body().to_string()))))
     }
 }
 
