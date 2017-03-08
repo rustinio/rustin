@@ -37,6 +37,31 @@ impl IncomingMessage {
             },
         })
     }
+
+    pub fn reply_privately<S>(&self, body: S) -> Action where S: Into<String> {
+        Action::SendMessage(OutgoingMessage {
+            body: body.into(),
+            target: match self.source {
+                Source::Room(ref room) => Target::Room(room.clone()),
+                Source::User(ref user) => Target::User(user.clone()),
+                Source::UserInRoom(ref user, _) => Target::User(user.clone()),
+            },
+        })
+    }
+
+    pub fn reply_with_mention<S>(&self, body: S) -> Action where S: Into<String> {
+        Action::SendMessage(OutgoingMessage {
+            body: body.into(),
+            target: match self.source {
+                Source::Room(ref room) => Target::Room(room.clone()),
+                Source::User(ref user) => Target::User(user.clone()),
+                Source::UserInRoom(ref user, ref room) => {
+                    Target::UserInRoom(user.clone(), room.clone())
+                }
+            },
+        })
+    }
+
 }
 
 impl OutgoingMessage {
