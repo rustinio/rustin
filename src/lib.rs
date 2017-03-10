@@ -16,6 +16,6 @@ pub use correspondent::{Source, Target};
 pub use error::Error;
 pub use handler::{Action, Handler};
 pub use message::{IncomingMessage, OutgoingMessage};
-pub use robot::{Config, Robot};
+pub use robot::{Config, run};
 pub use room::Room;
 pub use user::User;

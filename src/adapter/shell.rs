@@ -5,21 +5,25 @@ use std::time::Duration;
 use futures::future::{err, ok};
 use futures::sync::mpsc::channel;
 use futures::{Future, Sink, Stream};
-
 use correspondent::Source;
 use error::Error;
 use message::{IncomingMessage, OutgoingMessage};
+use robot::Config;
 use room::Room;
 use super::Adapter;
 use user::User;
 
 /// An adapter that runs in your shell.
-#[derive(Debug)]
-pub struct Shell;
+#[derive(Clone, Debug)]
+pub struct Shell {
+    config: Config,
+}
 
 impl Shell {
-    pub fn new() -> Self {
-        Shell
+    pub fn new(config: Config) -> Self {
+        Shell {
+            config: config,
+        }
     }
 }
 

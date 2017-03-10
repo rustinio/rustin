@@ -14,13 +14,6 @@ pub struct Config {
     pub name: String,
 }
 
-/// The primary entry point for running Rustin.
-pub struct Robot<A> where A: Adapter {
-    adapter: Rc<A>,
-    config: Config,
-    handlers: Vec<Rc<Handler>>,
-}
-
 impl Default for Config {
     fn default() -> Self {
         Config {
@@ -29,29 +22,21 @@ impl Default for Config {
     }
 }
 
-impl<A> Robot<A> where A: Adapter {
-    pub fn new(adapter: A, config: Config, handlers: Vec<Rc<Handler>>) -> Self {
-        Robot {
-            adapter: Rc::new(adapter),
-            config: config,
-            handlers: handlers,
-        }
-    }
+/// The primary entry point for running Rustin.
+pub fn run<A>(adapter: A, handlers: Vec<Rc<Handler>>)
+-> Box<Future<Item = (), Error = Error>> where A: Adapter {
+    let result = adapter.incoming().for_each(move |message| {
+        let handlers = Box::new(iter(handlers.clone().into_iter().map(Ok)));
 
-    pub fn run(self) -> Box<Future<Item = (), Error = Error>> {
-        let result = self.adapter.clone().incoming().for_each(move |message| {
-            let handlers = Box::new(iter(self.handlers.clone().into_iter().map(Ok)));
+        dispatch(adapter.clone(), handlers, message).for_each(|_| {
+            Ok(())
+        })
+    });
 
-            dispatch(self.adapter.clone(), handlers, message).for_each(|_| {
-                Ok(())
-            })
-        });
-
-        Box::new(result)
-    }
+    Box::new(result)
 }
 
-fn dispatch<A, H>(adapter: Rc<A>, handlers: Box<H>, message: IncomingMessage)
+fn dispatch<A, H>(adapter: A, handlers: Box<H>, message: IncomingMessage)
 -> Box<Stream<Item = (), Error = Error>>
 where A: Adapter, H: Stream<Item = Rc<Handler>, Error = Error> + 'static {
     let results = handlers.and_then(move |handler| {
@@ -63,7 +48,7 @@ where A: Adapter, H: Stream<Item = Rc<Handler>, Error = Error> + 'static {
     Box::new(results)
 }
 
-fn process_actions<A>(adapter: Rc<A>, actions: Box<Stream<Item = Action, Error = Error>>)
+fn process_actions<A>(adapter: A, actions: Box<Stream<Item = Action, Error = Error>>)
 -> Box<Future<Item = (), Error = Error>> where A: Adapter {
     let processed_actions = actions.for_each(move |action| {
         match action {

@@ -11,8 +11,8 @@ use rustin::{
     Error,
     Handler,
     IncomingMessage,
-    Robot,
     Shell,
+    run,
 };
 
 struct Echo;
@@ -25,10 +25,9 @@ impl Handler for Echo {
 
 fn main() {
     let config = Config::default();
-    let adapter = Shell::new();
-    let robot = Robot::new(adapter, config, vec![Rc::new(Echo)]);
+    let adapter = Shell::new(config);
 
-    if let Err(error) = robot.run().wait() {
+    if let Err(error) = run(adapter, vec![Rc::new(Echo)]).wait() {
         println!("ERROR: {}", error);
     }
 }
