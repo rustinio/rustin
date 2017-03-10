@@ -20,6 +20,7 @@ pub struct Shell {
 }
 
 impl Shell {
+    /// Creates a new `Shell` adapter.
     pub fn new(config: Config) -> Self {
         Shell {
             config: config,
@@ -38,16 +39,6 @@ impl Adapter for Shell {
 
     fn send_message(&self, message: OutgoingMessage) -> Box<Future<Item = (), Error = Error>> {
         println!("{}", message.body());
-
-        Box::new(ok(()))
-    }
-
-    fn send_messages(&self, messages: &[OutgoingMessage])
-    -> Box<Future<Item = (), Error = Error>> {
-
-        for message in messages {
-            println!("{}", message.body());
-        }
 
         Box::new(ok(()))
     }

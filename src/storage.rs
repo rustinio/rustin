@@ -1,3 +1,5 @@
+//! Types for persisting data beyond the execution of the program.
+
 use std::collections::HashMap;
 use std::fmt::Display;
 
@@ -16,6 +18,7 @@ pub trait Store {
 }
 
 /// A `Store` that lives in program memory, emptying when the program exits.
+#[derive(Debug)]
 pub struct Memory {
     data: HashMap<String, String>
 }
@@ -38,6 +41,7 @@ impl Store for Memory {
 }
 
 /// A `Store` that persists data into a parent store, prepending a prefix to all key names.
+#[derive(Debug)]
 pub struct ScopedStore<'a, S> where S: Store + 'a {
     parent: &'a mut S,
     prefix: String,

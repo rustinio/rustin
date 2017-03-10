@@ -1,4 +1,8 @@
-#![allow(dead_code)]
+//! Crate `rustin` is an extensible chat bot framework.
+
+#![deny(missing_debug_implementations)]
+#![deny(missing_docs)]
+#![deny(warnings)]
 
 extern crate futures;
 
