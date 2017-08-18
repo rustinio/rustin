@@ -1,3 +1,5 @@
+//! The type for chat users.
+
 /// A user of a chat service.
 #[derive(Clone, Debug)]
 pub struct User {

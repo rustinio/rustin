@@ -5,12 +5,12 @@ use std::time::Duration;
 use futures::future::{err, ok};
 use futures::sync::mpsc::channel;
 use futures::{Future, Sink, Stream};
-use correspondent::Source;
+
+use config::Config;
 use error::Error;
-use message::{IncomingMessage, OutgoingMessage};
-use robot::Config;
+use message::{IncomingMessage, OutgoingMessage, Source};
 use room::Room;
-use super::Adapter;
+use super::ChatService;
 use user::User;
 
 /// An adapter that runs in your shell.
@@ -20,7 +20,7 @@ pub struct Shell {
 }
 
 impl Shell {
-    /// Creates a new `Shell` adapter.
+    /// Creates a new `Shell`.
     pub fn new(config: Config) -> Self {
         Shell {
             config: config,
@@ -28,7 +28,7 @@ impl Shell {
     }
 }
 
-impl Adapter for Shell {
+impl ChatService for Shell {
     fn join(&self, _room: &Room) -> Box<Future<Item = (), Error = Error>> {
         Box::new(err(Error))
     }
@@ -37,9 +37,7 @@ impl Adapter for Shell {
         Box::new(err(Error))
     }
 
-    fn send_message(&self, message: OutgoingMessage) -> Box<Future<Item = (), Error = Error>> {
-        println!("{}", message.body());
-
+    fn send_message(&self, _message: OutgoingMessage) -> Box<Future<Item = (), Error = Error>> {
         Box::new(ok(()))
     }
 

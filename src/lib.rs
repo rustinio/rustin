@@ -6,24 +6,18 @@
 
 extern crate futures;
 
-pub mod adapter;
-mod correspondent;
+pub mod chat_service;
+mod config;
 mod error;
-mod handler;
-mod message;
+pub mod handler;
+pub mod message;
 mod robot;
 mod room;
 pub mod storage;
 mod user;
 
-#[doc(inline)]
-pub use adapter::{Adapter, Shell};
-pub use correspondent::{Source, Target};
+pub use config::Config;
 pub use error::Error;
-pub use handler::{Action, Handler};
-pub use message::{IncomingMessage, OutgoingMessage};
-pub use robot::{Config, run};
+pub use robot::Robot;
 pub use room::Room;
-#[doc(inline)]
-pub use storage::{Memory, Store};
 pub use user::User;

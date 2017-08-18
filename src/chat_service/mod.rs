@@ -6,12 +6,12 @@ use error::Error;
 use message::{IncomingMessage, OutgoingMessage};
 use room::Room;
 
-mod shell;
-
 pub use self::shell::Shell;
 
-/// A type that handles I/O between the robot and a chat service.
-pub trait Adapter: Clone + 'static {
+mod shell;
+
+/// A type that handles the implementation details of the Robot API for a particular chat service.
+pub trait ChatService: Clone {
     /// Makes Rustin join a chat room.
     fn join(&self, room: &Room) -> Box<Future<Item = (), Error = Error>>;
 

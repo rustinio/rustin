@@ -4,4 +4,4 @@ name = "rustin"
 version = "0.1.0"
 
 [dependencies]
-futures = "0.1.10"
+futures = "0.1.14"

@@ -1,3 +1,5 @@
+//! The type for chat rooms.
+
 /// A chat room.
 #[derive(Clone, Debug)]
 pub struct Room {

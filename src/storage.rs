@@ -1,4 +1,4 @@
-//! Types for persisting data beyond the execution of the program.
+//! Types for persisting data.
 
 use std::collections::HashMap;
 use std::fmt::Display;
