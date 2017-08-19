@@ -8,7 +8,6 @@ use error::Error;
 use storage::Store;
 
 /// The primary driver of a program using Rustin.
-#[derive(Debug)]
 pub struct Robot<C, S> {
     chat_service: Rc<C>,
     callbacks: Callbacks,

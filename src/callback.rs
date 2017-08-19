@@ -1,6 +1,5 @@
 //! Types for extending Rustin's behavior.
 
-use std::fmt::Debug;
 use std::rc::Rc;
 
 use futures::{Async, Poll, Stream};
@@ -9,7 +8,7 @@ use error::Error;
 use message::{IncomingMessage, OutgoingMessage};
 
 /// A callback that receives incoming messages and reacts to them however it wishes.
-pub trait Callback: Debug {
+pub trait Callback {
     /// Invokes the callback with the incoming message that triggered it.
     fn call(&self, message: IncomingMessage) -> Box<Stream<Item = Action, Error = Error>>;
 }
@@ -22,7 +21,7 @@ pub enum Action {
 }
 
 /// An asynchronous stream of callbacks.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Callbacks {
     index: usize,
     inner: Rc<Vec<Rc<Box<Callback>>>>,
@@ -43,12 +42,13 @@ impl Stream for Callbacks {
     type Error = Error;
 
     fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
-        if self.index >= self.inner.len() {
-            return Ok(Async::Ready(None));
-        } else {
+        if self.index < self.inner.len() {
+            let callback = self.inner[self.index].clone();
             self.index += 1;
 
-            return Ok(Async::Ready(Some(self.inner[self.index].clone())));
+            return Ok(Async::Ready(Some(callback)));
+        } else {
+            return Ok(Async::Ready(None));
         }
     }
 }

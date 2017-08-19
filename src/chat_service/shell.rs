@@ -6,7 +6,6 @@ use futures::future::{err, ok};
 use futures::sync::mpsc::channel;
 use futures::{Future, Sink, Stream};
 
-use config::Config;
 use error::Error;
 use message::{IncomingMessage, OutgoingMessage, Source};
 use room::Room;
@@ -15,18 +14,7 @@ use user::User;
 
 /// An adapter that runs in your shell.
 #[derive(Clone, Debug)]
-pub struct Shell {
-    config: Config,
-}
-
-impl Shell {
-    /// Creates a new `Shell`.
-    pub fn new(config: Config) -> Self {
-        Shell {
-            config: config,
-        }
-    }
-}
+pub struct Shell;
 
 impl ChatService for Shell {
     fn join(&self, _room: &Room) -> Box<Future<Item = (), Error = Error>> {
@@ -37,7 +25,9 @@ impl ChatService for Shell {
         Box::new(err(Error))
     }
 
-    fn send_message(&self, _message: OutgoingMessage) -> Box<Future<Item = (), Error = Error>> {
+    fn send_message(&self, message: OutgoingMessage) -> Box<Future<Item = (), Error = Error>> {
+        println!("{}", message);
+
         Box::new(ok(()))
     }
 

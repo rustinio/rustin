@@ -1,12 +1,10 @@
 //! Crate `rustin` is an extensible chat bot framework.
 
-#![deny(missing_debug_implementations)]
 #![deny(missing_docs)]
-#![deny(warnings)]
 
 extern crate futures;
 
-pub mod callback;
+mod callback;
 pub mod chat_service;
 mod config;
 mod error;
@@ -16,6 +14,7 @@ mod room;
 pub mod storage;
 mod user;
 
+pub use callback::{Action, Callback};
 pub use config::Config;
 pub use error::Error;
 pub use robot::Robot;

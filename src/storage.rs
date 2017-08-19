@@ -23,6 +23,15 @@ pub struct Memory {
     data: HashMap<String, String>
 }
 
+impl Memory {
+    /// Creates a new `Memory`.
+    pub fn new() -> Self {
+        Memory {
+            data: HashMap::new(),
+        }
+    }
+}
+
 impl Store for Memory {
     fn get<K>(&self, key: K) -> Option<&str> where K: AsRef<str> + Display {
         self.data.get(key.as_ref()).map(|value| value.as_str())

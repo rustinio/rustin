@@ -1,5 +1,7 @@
 //! Types for sending and receiving messages.
 
+use std::fmt::{Display, Formatter, Result as FmtResult};
+
 use callback::Action;
 use room::Room;
 use user::User;
@@ -82,6 +84,12 @@ impl OutgoingMessage {
     /// The body of the message.
     pub fn body(&self) -> &str {
         &self.body
+    }
+}
+
+impl Display for OutgoingMessage {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        write!(f, "{}", self.body)
     }
 }
 
