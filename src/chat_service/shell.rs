@@ -75,7 +75,7 @@ impl ChatService for Shell {
 
                         match tx.send(Ok(message)).wait() {
                             Ok(new_tx) => {
-                                // Hack to keep the prompt from appearing before handlers have
+                                // Hack to keep the prompt from appearing before callbacks have
                                 // finished responding.
                                 thread::sleep(duration);
 

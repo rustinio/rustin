@@ -5,9 +5,9 @@ use futures::stream::once;
 use futures::{Future, Stream};
 use rustin::{
     Action,
+    Callback,
     Config,
     Error,
-    Handler,
     IncomingMessage,
     Shell,
     run,
@@ -15,7 +15,7 @@ use rustin::{
 
 struct Echo;
 
-impl Handler for Echo {
+impl Callback for Echo {
     fn call(&self, message: IncomingMessage) -> impl Stream<Item = Action, Error = Error> {
         once(Ok(message.reply(message.body().to_string())))
     }

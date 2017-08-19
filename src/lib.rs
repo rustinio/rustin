@@ -6,10 +6,10 @@
 
 extern crate futures;
 
+pub mod callback;
 pub mod chat_service;
 mod config;
 mod error;
-pub mod handler;
 pub mod message;
 mod robot;
 mod room;

@@ -1,6 +1,6 @@
 //! Types for sending and receiving messages.
 
-use handler::Action;
+use callback::Action;
 use room::Room;
 use user::User;
 
