@@ -17,6 +17,6 @@ mod user;
 pub use callback::{Action, Callback};
 pub use config::Config;
 pub use error::Error;
-pub use robot::Robot;
+pub use robot::{Builder, Robot};
 pub use room::Room;
 pub use user::User;

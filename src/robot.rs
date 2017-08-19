@@ -7,19 +7,44 @@ use chat_service::ChatService;
 use error::Error;
 use storage::Store;
 
+/// A builder for configuring a new `Robot`.
+pub struct Builder<C, S> {
+    callbacks: Vec<Rc<Box<Callback>>>,
+    chat_service: C,
+    storage: S,
+}
+
+impl<C, S> Builder<C, S> {
+    /// Adds a callback.
+    pub fn callback<T>(mut self, callback: T) -> Self where T: Callback + 'static {
+        self.callbacks.push(Rc::new(Box::new(callback)));
+
+        self
+    }
+
+    /// Creates a `Robot` from the builder.
+    pub fn finish(self) -> Robot<C, S> {
+        Robot {
+            callbacks: Callbacks::new(self.callbacks),
+            chat_service: Rc::new(self.chat_service),
+            storage: self.storage
+        }
+    }
+}
+
 /// The primary driver of a program using Rustin.
 pub struct Robot<C, S> {
-    chat_service: Rc<C>,
     callbacks: Callbacks,
+    chat_service: Rc<C>,
     storage: S,
 }
 
 impl<C, S> Robot<C, S> where C: ChatService + 'static, S: Store + 'static {
-    /// Creates a new `Robot`.
-    pub fn new(chat_service: C, storage: S, callbacks: Vec<Box<Callback>>) -> Self {
-        Robot {
-            chat_service: Rc::new(chat_service),
-            callbacks: Callbacks::new(callbacks),
+    /// Begins constructing a `Robot`.
+    pub fn build(chat_service: C, storage: S) -> Builder<C, S> {
+        Builder {
+            callbacks: Vec::new(),
+            chat_service,
             storage,
         }
     }

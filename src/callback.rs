@@ -29,10 +29,10 @@ pub struct Callbacks {
 
 impl Callbacks {
     /// Creates a new `Callbacks` from a vector of callbacks.
-    pub fn new(callbacks: Vec<Box<Callback>>) -> Self {
+    pub fn new(callbacks: Vec<Rc<Box<Callback>>>) -> Self {
         Callbacks {
             index: 0,
-            inner: Rc::new(callbacks.into_iter().map(|callback| Rc::new(callback)).collect()),
+            inner: Rc::new(callbacks),
         }
     }
 }

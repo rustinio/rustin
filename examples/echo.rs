@@ -17,7 +17,9 @@ impl Callback for Echo {
 }
 
 fn main() {
-    let robot = Robot::new(Shell, Memory::new(), vec![Box::new(Echo)]);
+    let robot = Robot::build(Shell, Memory::new())
+        .callback(Echo)
+        .finish();
 
     if let Err(error) = robot.run().wait() {
         println!("ERROR: {}", error);
