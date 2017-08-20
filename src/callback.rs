@@ -1,5 +1,6 @@
 //! Types for extending Rustin's behavior.
 
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use futures::{Async, Poll, Stream};
@@ -8,13 +9,13 @@ use error::Error;
 use message::{IncomingMessage, OutgoingMessage};
 
 /// A callback that receives incoming messages and reacts to them however it wishes.
-pub trait Callback {
+pub trait Callback<S> {
     /// Invokes the callback with the incoming message that triggered it.
-    fn call(&self, message: IncomingMessage) -> Box<Stream<Item = Action, Error = Error>>;
+    fn call(&self, message: IncomingMessage, state: Rc<RefCell<S>>) -> Box<Stream<Item = Action, Error = Error>>;
 }
 
-impl<T> Callback for T where T: Fn(IncomingMessage) -> Box<Stream<Item = Action, Error = Error>> {
-    fn call(&self, message: IncomingMessage) -> Box<Stream<Item = Action, Error = Error>> {
+impl<T, S> Callback<S> for T where T: Fn(IncomingMessage) -> Box<Stream<Item = Action, Error = Error>> {
+    fn call(&self, message: IncomingMessage, _state: Rc<RefCell<S>>) -> Box<Stream<Item = Action, Error = Error>> {
         self(message)
     }
 }
@@ -27,15 +28,14 @@ pub enum Action {
 }
 
 /// An asynchronous stream of callbacks.
-#[derive(Clone)]
-pub struct Callbacks {
+pub struct Callbacks<S> {
     index: usize,
-    inner: Rc<Vec<Rc<Box<Callback>>>>,
+    inner: Rc<Vec<Rc<Box<Callback<S>>>>>,
 }
 
-impl Callbacks {
+impl<S> Callbacks<S> {
     /// Creates a new `Callbacks` from a vector of callbacks.
-    pub fn new(callbacks: Vec<Rc<Box<Callback>>>) -> Self {
+    pub fn new(callbacks: Vec<Rc<Box<Callback<S>>>>) -> Self {
         Callbacks {
             index: 0,
             inner: Rc::new(callbacks),
@@ -43,8 +43,17 @@ impl Callbacks {
     }
 }
 
-impl Stream for Callbacks {
-    type Item = Rc<Box<Callback>>;
+impl<S> Clone for Callbacks<S> {
+    fn clone(&self) -> Self {
+        Callbacks {
+            index: 0,
+            inner: self.inner.clone(),
+        }
+    }
+}
+
+impl<S> Stream for Callbacks<S> {
+    type Item = Rc<Box<Callback<S>>>;
     type Error = Error;
 
     fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
