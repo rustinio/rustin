@@ -63,6 +63,15 @@ impl IncomingMessage {
         })
     }
 
+    /// The room the message was sent from, if any.
+    pub fn room(&self) -> Option<&Room> {
+        self.source.room()
+    }
+
+    /// The user that sent the message.
+    pub fn user(&self) -> &User {
+        self.source.user()
+    }
 }
 
 /// An outgoing chat message.
@@ -100,6 +109,24 @@ pub enum Source {
     User(User),
     /// A message from a user in room.
     UserInRoom(User, Room),
+}
+
+impl Source {
+    /// The user that sent the message.
+    pub fn user(&self) -> &User {
+        match *self {
+            Source::User(ref user) => user,
+            Source::UserInRoom(ref user, _) => user,
+        }
+    }
+
+    /// The room the message was sent from, if any.
+    pub fn room(&self) -> Option<&Room> {
+        match *self {
+            Source::User(_) => None,
+            Source::UserInRoom(_, ref room) => Some(room),
+        }
+    }
 }
 
 /// The target of an outgoing message.

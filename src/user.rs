@@ -17,4 +17,14 @@ impl User {
             name: name.map(|n| n.into()),
         }
     }
+
+    /// A unique identifier for the user.
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
+    /// A human-readable name for the user.
+    pub fn name(&self) -> Option<&str> {
+        self.name.as_ref().map(String::as_str)
+    }
 }
