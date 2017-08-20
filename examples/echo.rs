@@ -6,19 +6,15 @@ use futures::{Future, Stream};
 use rustin::chat_service::Shell;
 use rustin::message::IncomingMessage;
 use rustin::storage::Memory;
-use rustin::{Action, Callback, Error, Robot};
+use rustin::{Action, Error, Robot};
 
-struct Echo;
-
-impl Callback for Echo {
-    fn call(&self, message: IncomingMessage) -> Box<Stream<Item = Action, Error = Error>> {
-        Box::new(once(Ok(message.reply(message.body().to_string()))))
-    }
+fn echo(message: IncomingMessage) -> Box<Stream<Item = Action, Error = Error>> {
+    Box::new(once(Ok(message.reply(message.body()))))
 }
 
 fn main() {
     let robot = Robot::build(Shell, Memory::new())
-        .callback(Echo)
+        .callback(echo)
         .finish();
 
     if let Err(error) = robot.run().wait() {

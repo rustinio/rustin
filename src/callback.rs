@@ -13,6 +13,12 @@ pub trait Callback {
     fn call(&self, message: IncomingMessage) -> Box<Stream<Item = Action, Error = Error>>;
 }
 
+impl<T> Callback for T where T: Fn(IncomingMessage) -> Box<Stream<Item = Action, Error = Error>> {
+    fn call(&self, message: IncomingMessage) -> Box<Stream<Item = Action, Error = Error>> {
+        self(message)
+    }
+}
+
 /// An action that a callback can take in response to an incoming message.
 #[derive(Debug)]
 pub enum Action {
