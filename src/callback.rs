@@ -11,11 +11,11 @@ use message::{IncomingMessage, OutgoingMessage};
 /// A callback that receives incoming messages and reacts to them however it wishes.
 pub trait Callback<S> {
     /// Invokes the callback with the incoming message that triggered it.
-    fn call(&self, message: IncomingMessage, state: Rc<RefCell<S>>) -> Box<Stream<Item = Action, Error = Error>>;
+    fn call(&self, message: IncomingMessage, state: Rc<RefCell<S>>) -> ActionStream;
 }
 
-impl<T, S> Callback<S> for T where T: Fn(IncomingMessage) -> Box<Stream<Item = Action, Error = Error>> {
-    fn call(&self, message: IncomingMessage, _state: Rc<RefCell<S>>) -> Box<Stream<Item = Action, Error = Error>> {
+impl<F, S> Callback<S> for F where F: Fn(IncomingMessage) -> ActionStream {
+    fn call(&self, message: IncomingMessage, _state: Rc<RefCell<S>>) -> ActionStream {
         self(message)
     }
 }
@@ -26,6 +26,9 @@ pub enum Action {
     /// Sends a message to the chat service.
     SendMessage(OutgoingMessage),
 }
+
+/// An asynchronous stream of actions. This type is returned by callbacks.
+pub type ActionStream = Box<Stream<Item = Action, Error = Error>>;
 
 /// An asynchronous stream of callbacks.
 pub struct Callbacks<S> {

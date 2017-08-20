@@ -14,7 +14,7 @@ mod room;
 pub mod storage;
 mod user;
 
-pub use callback::{Action, Callback};
+pub use callback::{Action, ActionStream, Callback};
 pub use config::Config;
 pub use error::Error;
 pub use robot::{Builder, Robot};
@@ -33,7 +33,7 @@ mod tests {
     use super::chat_service::ChatService;
     use super::message::{IncomingMessage, OutgoingMessage};
     use super::storage::{Memory, Store};
-    use super::{Action, Callback, Error, Robot, Room};
+    use super::{ActionStream, Callback, Error, Robot, Room};
 
     #[derive(Clone, Debug)]
     struct NullChat;
@@ -61,7 +61,7 @@ mod tests {
         struct Echo;
 
         impl<S> Callback<S> for Echo {
-            fn call(&self, message: IncomingMessage, _store: Rc<RefCell<S>>) -> Box<Stream<Item = Action, Error = Error>> {
+            fn call(&self, message: IncomingMessage, _store: Rc<RefCell<S>>) -> ActionStream {
                 Box::new(once(Ok(message.reply(message.body()))))
             }
         }
@@ -73,7 +73,7 @@ mod tests {
 
     #[test]
     fn fn_stateless_callback() {
-        fn echo(message: IncomingMessage) -> Box<Stream<Item = Action, Error = Error>> {
+        fn echo(message: IncomingMessage) -> ActionStream {
             Box::new(once(Ok(message.reply(message.body()))))
         }
 
@@ -87,7 +87,7 @@ mod tests {
         struct WelcomeBack;
 
         impl<S> Callback<S> for WelcomeBack where S: Store {
-            fn call(&self, message: IncomingMessage, state: Rc<RefCell<S>>) -> Box<Stream<Item = Action, Error = Error>> {
+            fn call(&self, message: IncomingMessage, state: Rc<RefCell<S>>) -> ActionStream {
                 let mut s = match state.try_borrow_mut() {
                     Ok(s) => s,
                     Err(_) => return Box::new(once(Err(Error))),
