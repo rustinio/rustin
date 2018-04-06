@@ -3,5 +3,6 @@ authors = ["Jimmy Cuadra <jimmy@jimmycuadra.com>"]
 name = "rustin"
 version = "0.1.0"
 
-[dependencies]
-futures = "0.1.14"
+[dependencies.futures]
+features = ["nightly"]
+git = "https://github.com/rust-lang-nursery/futures-rs"

@@ -3,7 +3,8 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use futures::{Async, Poll, Stream};
+use futures::task::Context;
+use futures::{Async, Stream};
 
 use error::Error;
 use message::{IncomingMessage, OutgoingMessage};
@@ -59,7 +60,7 @@ impl<S> Stream for Callbacks<S> {
     type Item = Rc<Box<Callback<S>>>;
     type Error = Error;
 
-    fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
+    fn poll_next(&mut self, _cx: &mut Context) -> Result<Async<Option<Self::Item>>, Self::Error> {
         if self.index < self.inner.len() {
             let callback = self.inner[self.index].clone();
             self.index += 1;

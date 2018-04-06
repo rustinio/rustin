@@ -2,9 +2,10 @@ use std::io::{self, BufRead, Write};
 use std::thread;
 use std::time::Duration;
 
+use futures::executor::block_on;
 use futures::future::{err, ok};
-use futures::sync::mpsc::channel;
-use futures::{Future, Sink, Stream};
+use futures::channel::mpsc::channel;
+use futures::{Future, SinkExt, Stream, StreamExt};
 
 use error::Error;
 use message::{IncomingMessage, OutgoingMessage, Source};
@@ -63,7 +64,7 @@ impl ChatService for Shell {
                         let source = Source::User(user);
                         let message = IncomingMessage::new(source, body);
 
-                        match tx.send(Ok(message)).wait() {
+                        match block_on(tx.send(Ok(message))) {
                             Ok(new_tx) => {
                                 // Hack to keep the prompt from appearing before callbacks have
                                 // finished responding.

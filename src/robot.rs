@@ -1,11 +1,12 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use futures::{Future, Stream};
+use futures::prelude::{async, await};
 
 use callback::{Action, Callback, Callbacks};
 use chat_service::ChatService;
 use error::Error;
+
 /// A builder for configuring a new `Robot`.
 pub struct Builder<C, S> {
     callbacks: Vec<Rc<Box<Callback<S>>>>,
@@ -49,24 +50,26 @@ impl<C, S> Robot<C, S> where C: ChatService + 'static, S: 'static {
     }
 
     /// Starts the robot, connecting to the chat service and listening for incoming messages.
-    pub fn run(self) -> Box<Future<Item = (), Error = Error>> {
-        Box::new(self.chat_service.incoming().for_each(move |message| {
-            let chat_service = self.chat_service.clone();
-            let state = self.state.clone();
-
-            self.callbacks.clone().for_each(move |callback| {
-                let chat_service = chat_service.clone();
+    #[async]
+    pub fn run(self) -> Result<(), Error> {
+        #[async]
+        for message in self.chat_service.incoming() {
+            #[async]
+            for callback in self.callbacks.clone() {
                 let message = message.clone();
-                let state = state.clone();
+                let state = self.state.clone();
 
-                callback.call(message, state).for_each(move |action| {
+                #[async]
+                for action in callback.call(message, state) {
                     match action {
                         Action::SendMessage(outgoing) => {
-                            chat_service.send_message(outgoing)
+                            await!(self.chat_service.send_message(outgoing))?;
                         }
                     }
-                })
-            })
-        }))
+                }
+            }
+        }
+
+        Ok(())
     }
 }
