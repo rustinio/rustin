@@ -1,8 +1,7 @@
 extern crate futures;
 extern crate rustin;
 
-use futures::executor::block_on;
-use futures::stable::StableFuture;
+use futures::stable::block_on_stable;
 use futures::stream::once;
 use rustin::chat_service::Shell;
 use rustin::message::IncomingMessage;
@@ -18,7 +17,7 @@ fn main() {
         .callback(echo)
         .finish();
 
-    if let Err(error) = block_on(robot.run().pin_local()) {
+    if let Err(error) = block_on_stable(robot.run()) {
         println!("ERROR: {}", error);
     }
 }
