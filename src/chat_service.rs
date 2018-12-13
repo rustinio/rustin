@@ -12,15 +12,18 @@ mod shell;
 
 /// A type that handles the implementation details of the Robot API for a particular chat service.
 pub trait ChatService: Clone {
+    type Success: Future<Output = Result<(), Error>>;
+    type Incoming: Stream<Item = Result<IncomingMessage, Error>>;
+
     /// Makes Rustin join a chat room.
-    fn join(&self, room: &Room) -> Box<Future<Output = Result<(), Error>>>;
+    fn join(&self, room: &Room) -> Self::Success;
 
     /// Makes Rustin part from a chat room.
-    fn part(&self, room: &Room) -> Box<Future<Output = Result<(), Error>>>;
+    fn part(&self, room: &Room) -> Self::Success;
 
     /// Sends a message to a chat room or user.
-    fn send_message(&self, message: OutgoingMessage) -> Box<Future<Output = Result<(), Error>>>;
+    fn send_message(&self, message: OutgoingMessage) -> Self::Success;
 
     /// Connects to the chat service and listens for incoming messages.
-    fn incoming(&self) -> Box<Stream<Item = Result<IncomingMessage, Error>>>;
+    fn incoming(&self) -> Self::Incoming;
 }

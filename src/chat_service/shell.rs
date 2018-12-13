@@ -17,21 +17,24 @@ use crate::user::User;
 pub struct Shell;
 
 impl ChatService for Shell {
-    fn join(&self, _room: &Room) -> Box<Future<Output = Result<(), Error>>> {
-        Box::new(err(Error))
+    existential type Success: Future<Output = Result<(), Error>>;
+    existential type Incoming: Stream<Item = Result<IncomingMessage, Error>>;
+
+    fn join(&self, _room: &Room) -> Self::Success {
+        err(Error)
     }
 
-    fn part(&self, _room: &Room) -> Box<Future<Output = Result<(), Error>>> {
-        Box::new(err(Error))
+    fn part(&self, _room: &Room) -> Self::Success {
+        err(Error)
     }
 
-    fn send_message(&self, message: OutgoingMessage) -> Box<Future<Output = Result<(), Error>>> {
+    fn send_message(&self, message: OutgoingMessage) -> Self::Success {
         println!("{}", message);
 
-        Box::new(ok(()))
+        ok(())
     }
 
-    fn incoming(&self) -> Box<Stream<Item = Result<IncomingMessage, Error>>> {
+    fn incoming(&self) -> Self::Incoming {
         let (mut tx, rx) = channel(0);
 
         thread::spawn(move || {
@@ -84,6 +87,6 @@ impl ChatService for Shell {
             }
         });
 
-        Box::new(rx)
+        rx
     }
 }
