@@ -2,14 +2,14 @@ use std::io::{self, BufRead, Write};
 use std::thread;
 use std::time::Duration;
 
-use futures::future::{err, ok};
 use futures::channel::mpsc::channel;
+use futures::future::{err, ok};
 use futures::{Future, SinkExt, Stream};
 
+use super::ChatService;
 use crate::error::Error;
 use crate::message::{IncomingMessage, OutgoingMessage, Source};
 use crate::room::Room;
-use super::ChatService;
 use crate::user::User;
 
 /// An adapter that runs in your shell.

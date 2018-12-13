@@ -13,9 +13,7 @@ fn echo(message: IncomingMessage) -> ActionStream {
 }
 
 fn main() {
-    let robot = Robot::build(Shell, Memory::new())
-        .callback(echo)
-        .finish();
+    let robot = Robot::build(Shell, Memory::new()).callback(echo).finish();
 
     if let Err(error) = block_on_stable(robot.run()) {
         println!("ERROR: {}", error);

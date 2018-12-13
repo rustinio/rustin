@@ -8,7 +8,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            name: "Rustin".to_string()
+            name: "Rustin".to_string(),
         }
     }
 }

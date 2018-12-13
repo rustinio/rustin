@@ -11,7 +11,11 @@ pub struct User {
 
 impl User {
     /// Creates a new `User`.
-    pub fn new<I, N>(id: I, name: Option<N>) -> Self where I: Into<String>, N: Into<String> {
+    pub fn new<I, N>(id: I, name: Option<N>) -> Self
+    where
+        I: Into<String>,
+        N: Into<String>,
+    {
         User {
             id: id.into(),
             name: name.map(|n| n.into()),

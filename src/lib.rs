@@ -85,7 +85,10 @@ mod tests {
     fn manual_stateful_callback() {
         struct WelcomeBack;
 
-        impl<S> Callback<S> for WelcomeBack where S: Store {
+        impl<S> Callback<S> for WelcomeBack
+        where
+            S: Store,
+        {
             fn call(&self, message: IncomingMessage, state: Rc<RefCell<S>>) -> ActionStream {
                 let mut s = match state.try_borrow_mut() {
                     Ok(s) => s,
@@ -95,7 +98,10 @@ mod tests {
                 let id = message.user().id();
 
                 if s.get(id).is_some() {
-                    Box::new(once(Ok(message.reply(format!("Hello again, {}!", message.user().name().unwrap_or(id))))))
+                    Box::new(once(Ok(message.reply(format!(
+                        "Hello again, {}!",
+                        message.user().name().unwrap_or(id)
+                    )))))
                 } else {
                     s.set(id, "1");
 

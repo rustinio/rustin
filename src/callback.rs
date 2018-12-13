@@ -4,8 +4,8 @@ use std::cell::RefCell;
 use std::pin::Pin;
 use std::rc::Rc;
 
-use futures::Stream;
 use futures::task::{LocalWaker, Poll};
+use futures::Stream;
 
 use crate::error::Error;
 use crate::message::{IncomingMessage, OutgoingMessage};
@@ -16,7 +16,10 @@ pub trait Callback<S> {
     fn call(&self, message: IncomingMessage, state: Rc<RefCell<S>>) -> ActionStream;
 }
 
-impl<F, S> Callback<S> for F where F: Fn(IncomingMessage) -> ActionStream {
+impl<F, S> Callback<S> for F
+where
+    F: Fn(IncomingMessage) -> ActionStream,
+{
     fn call(&self, message: IncomingMessage, _state: Rc<RefCell<S>>) -> ActionStream {
         self(message)
     }

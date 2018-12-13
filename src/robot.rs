@@ -17,7 +17,10 @@ pub struct Builder<C, S> {
 
 impl<C, S> Builder<C, S> {
     /// Adds a callback.
-    pub fn callback<T>(mut self, callback: T) -> Self where T: Callback<S> + 'static {
+    pub fn callback<T>(mut self, callback: T) -> Self
+    where
+        T: Callback<S> + 'static,
+    {
         self.callbacks.push(Rc::new(Box::new(callback)));
 
         self
@@ -40,7 +43,11 @@ pub struct Robot<C, S> {
     state: Rc<RefCell<S>>,
 }
 
-impl<C, S> Robot<C, S> where C: ChatService + 'static, S: 'static {
+impl<C, S> Robot<C, S>
+where
+    C: ChatService + 'static,
+    S: 'static,
+{
     /// Begins constructing a `Robot`.
     pub fn build(chat_service: C, state: S) -> Builder<C, S> {
         Builder {
