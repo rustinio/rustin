@@ -6,7 +6,7 @@ use rustin::message::IncomingMessage;
 use rustin::storage::Memory;
 use rustin::{ActionStream, Robot};
 
-fn echo(message: IncomingMessage) -> ActionStream {
+fn echo(message: &IncomingMessage) -> ActionStream {
     Box::new(once(ok(message.reply(message.body()))))
 }
 

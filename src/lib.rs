@@ -5,7 +5,6 @@
     arbitrary_self_types,
     async_await,
     await_macro,
-    existential_type,
     futures_api,
     pin
 )]
@@ -31,35 +30,30 @@ pub use crate::user::User;
 mod tests {
     use futures::future::ok;
     use futures::stream::{empty, once};
-    use futures::{Future, Stream};
 
-    use super::chat_service::ChatService;
+    use super::chat_service::{ChatService, Incoming, Success};
     use super::message::{IncomingMessage, OutgoingMessage};
     use super::storage::{Memory, Store};
-    use super::{ActionStream, Callback, Error, Robot, Room};
+    use super::{ActionStream, Callback, Robot, Room};
 
     #[derive(Clone, Debug)]
     struct NullChat;
 
     impl ChatService for NullChat {
-        existential type Success: Future<Output = Result<(), Error>>;
-
-        existential type Incoming: Stream<Item = Result<IncomingMessage, Error>>;
-
-        fn join(&self, _room: &Room) -> Self::Success {
-            ok(())
+        fn join(&self, _room: &Room) -> Success {
+            Box::new(ok(()))
         }
 
-        fn part(&self, _room: &Room) -> Self::Success {
-            ok(())
+        fn part(&self, _room: &Room) -> Success {
+            Box::new(ok(()))
         }
 
-        fn send_message(&self, _message: OutgoingMessage) -> Self::Success {
-            ok(())
+        fn send_message(&self, _message: OutgoingMessage) -> Success {
+            Box::new(ok(()))
         }
 
-        fn incoming(&self) -> Self::Incoming {
-            empty()
+        fn incoming(&self) -> Incoming {
+            Box::new(empty())
         }
     }
 

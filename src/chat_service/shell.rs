@@ -4,9 +4,8 @@ use std::time::Duration;
 
 use futures::channel::mpsc::channel;
 use futures::future::{err, ok};
-use futures::{Future, Stream};
 
-use super::ChatService;
+use super::{ChatService, Incoming, Success};
 use crate::error::Error;
 use crate::message::{IncomingMessage, OutgoingMessage, Source};
 use crate::room::Room;
@@ -17,24 +16,21 @@ use crate::user::User;
 pub struct Shell;
 
 impl ChatService for Shell {
-    existential type Success: Future<Output = Result<(), Error>>;
-    existential type Incoming: Stream<Item = Result<IncomingMessage, Error>>;
-
-    fn join(&self, _room: &Room) -> Self::Success {
-        err(Error)
+    fn join(&self, _room: &Room) -> Success {
+        Box::new(err(Error))
     }
 
-    fn part(&self, _room: &Room) -> Self::Success {
-        err(Error)
+    fn part(&self, _room: &Room) -> Success {
+        Box::new(err(Error))
     }
 
-    fn send_message(&self, message: OutgoingMessage) -> Self::Success {
+    fn send_message(&self, message: OutgoingMessage) -> Success {
         println!("{}", message);
 
-        ok(())
+        Box::new(ok(()))
     }
 
-    fn incoming(&self) -> Self::Incoming {
+    fn incoming(&self) -> Incoming {
         let (mut tx, rx) = channel(0);
 
         thread::spawn(move || {
@@ -87,6 +83,6 @@ impl ChatService for Shell {
             }
         });
 
-        rx
+        Box::new(rx)
     }
 }
