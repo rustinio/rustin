@@ -11,7 +11,7 @@ pub use self::shell::Shell;
 mod shell;
 
 /// A type that handles the implementation details of the Robot API for a particular chat service.
-pub trait ChatService: Clone {
+pub trait ChatService {
     /// A type indicating a successful operation with the chat service that has no meaningful
     /// return value.
     type Success: Future<Output = Result<(), Error>>;

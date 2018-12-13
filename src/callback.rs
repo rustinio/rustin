@@ -10,14 +10,14 @@ use crate::message::{IncomingMessage, OutgoingMessage};
 /// A callback that receives incoming messages and reacts to them however it wishes.
 pub trait Callback<S> {
     /// Invokes the callback with the incoming message that triggered it.
-    fn call(&self, message: IncomingMessage, state: S) -> ActionStream;
+    fn call(&self, message: &IncomingMessage, state: &mut S) -> ActionStream;
 }
 
 impl<F, S> Callback<S> for F
 where
-    F: Fn(IncomingMessage) -> ActionStream,
+    F: Fn(&IncomingMessage) -> ActionStream,
 {
-    fn call(&self, message: IncomingMessage, _state: S) -> ActionStream {
+    fn call(&self, message: &IncomingMessage, _state: &mut S) -> ActionStream {
         self(message)
     }
 }

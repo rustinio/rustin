@@ -45,7 +45,7 @@ impl<C, S> Robot<C, S>
 where
     C: ChatService + Unpin + 'static,
     <C as ChatService>::Incoming: Unpin,
-    S: Clone + 'static,
+    S: 'static,
 {
     /// Begins constructing a `Robot`.
     pub fn build(chat_service: C, state: S) -> Builder<C, S> {
@@ -57,13 +57,13 @@ where
     }
 
     /// Starts the robot, connecting to the chat service and listening for incoming messages.
-    pub async fn run(self) -> Result<(), Error> {
+    pub async fn run(mut self) -> Result<(), Error> {
         let mut incoming_messages = self.chat_service.incoming();
         let mut callbacks = iter(self.callbacks.into_iter());
 
         while let Some(Ok(message)) = await!(StreamExt::next(&mut incoming_messages)) {
             while let Some(callback) = await!(callbacks.next()) {
-                let mut actions = callback.call(message.clone(), self.state.clone());
+                let mut actions = callback.call(&message, &mut self.state);
 
                 while let Some(Ok(action)) = await!(StreamExt::next(&mut actions)) {
                     match action {
