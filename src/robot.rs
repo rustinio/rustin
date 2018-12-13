@@ -2,7 +2,6 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use futures::stream::StreamExt;
-use futures::task::Poll;
 
 use crate::callback::{Action, Callback, Callbacks};
 use crate::chat_service::ChatService;
@@ -60,12 +59,16 @@ where
     /// Starts the robot, connecting to the chat service and listening for incoming messages.
     pub async fn run(self) -> Result<(), Error> {
         let incoming_messages = self.chat_service.incoming();
-        while let Poll::Ready(Some(message)) = await!(StreamExt::next(&mut incoming_messages)) {
-            for callback in self.callbacks.clone() {
+
+        while let Some(Ok(message)) = await!(StreamExt::next(&mut incoming_messages)) {
+            let callbacks = self.callbacks;
+
+            while let Some(Ok(callback)) = await!(callbacks.next()) {
                 let message = message.clone();
                 let state = self.state.clone();
+                let actions = callback.call(message, state);
 
-                for action in callback.call(message, state) {
+                while let Some(Ok(action)) = await!(StreamExt::next(&mut actions)) {
                     match action {
                         Action::SendMessage(outgoing) => {
                             await!(self.chat_service.send_message(outgoing))?;
