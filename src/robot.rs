@@ -43,9 +43,8 @@ pub struct Robot<C, S> {
 
 impl<C, S> Robot<C, S>
 where
-    C: ChatService + Unpin + 'static,
+    C: ChatService + Unpin,
     <C as ChatService>::Incoming: Unpin,
-    S: 'static,
 {
     /// Begins constructing a `Robot`.
     pub fn build(chat_service: C, state: S) -> Builder<C, S> {
