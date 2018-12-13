@@ -1,9 +1,7 @@
 //! Crate `rustin` is an extensible chat bot framework.
 
 #![deny(missing_docs)]
-#![feature(generators, pin, proc_macro, use_extern_macros)]
-
-extern crate futures;
+#![feature(arbitrary_self_types, async_await, await_macro, futures_api, pin)]
 
 mod callback;
 pub mod chat_service;
@@ -15,12 +13,12 @@ mod room;
 pub mod storage;
 mod user;
 
-pub use callback::{Action, ActionStream, Callback};
-pub use config::Config;
-pub use error::Error;
-pub use robot::{Builder, Robot};
-pub use room::Room;
-pub use user::User;
+pub use crate::callback::{Action, ActionStream, Callback};
+pub use crate::config::Config;
+pub use crate::error::Error;
+pub use crate::robot::{Builder, Robot};
+pub use crate::room::Room;
+pub use crate::user::User;
 
 #[cfg(test)]
 mod tests {

@@ -1,8 +1,8 @@
 [package]
 authors = ["Jimmy Cuadra <jimmy@jimmycuadra.com>"]
 name = "rustin"
+edition = "2018"
 version = "0.1.0"
 
-[dependencies.futures]
-features = ["nightly"]
-git = "https://github.com/rust-lang-nursery/futures-rs"
+[dependencies]
+futures-preview = "0.3.0-alpha.10"

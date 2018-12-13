@@ -2,37 +2,36 @@ use std::io::{self, BufRead, Write};
 use std::thread;
 use std::time::Duration;
 
-use futures::executor::block_on;
 use futures::future::{err, ok};
 use futures::channel::mpsc::channel;
-use futures::{Future, SinkExt, Stream, StreamExt};
+use futures::{Future, SinkExt, Stream};
 
-use error::Error;
-use message::{IncomingMessage, OutgoingMessage, Source};
-use room::Room;
+use crate::error::Error;
+use crate::message::{IncomingMessage, OutgoingMessage, Source};
+use crate::room::Room;
 use super::ChatService;
-use user::User;
+use crate::user::User;
 
 /// An adapter that runs in your shell.
 #[derive(Clone, Debug)]
 pub struct Shell;
 
 impl ChatService for Shell {
-    fn join(&self, _room: &Room) -> Box<Future<Item = (), Error = Error>> {
+    fn join(&self, _room: &Room) -> Box<Future<Output = Result<(), Error>>> {
         Box::new(err(Error))
     }
 
-    fn part(&self, _room: &Room) -> Box<Future<Item = (), Error = Error>> {
+    fn part(&self, _room: &Room) -> Box<Future<Output = Result<(), Error>>> {
         Box::new(err(Error))
     }
 
-    fn send_message(&self, message: OutgoingMessage) -> Box<Future<Item = (), Error = Error>> {
+    fn send_message(&self, message: OutgoingMessage) -> Box<Future<Output = Result<(), Error>>> {
         println!("{}", message);
 
         Box::new(ok(()))
     }
 
-    fn incoming(&self) -> Box<Stream<Item = IncomingMessage, Error = Error>> {
+    fn incoming(&self) -> Box<Stream<Item = Result<IncomingMessage, Error>>> {
         let (mut tx, rx) = channel(0);
 
         thread::spawn(move || {
@@ -64,13 +63,11 @@ impl ChatService for Shell {
                         let source = Source::User(user);
                         let message = IncomingMessage::new(source, body);
 
-                        match block_on(tx.send(Ok(message))) {
-                            Ok(new_tx) => {
+                        match tx.try_send(Ok(message)) {
+                            Ok(_) => {
                                 // Hack to keep the prompt from appearing before callbacks have
                                 // finished responding.
                                 thread::sleep(duration);
-
-                                tx = new_tx;
 
                                 print!("{}", prompt);
                                 output.flush().unwrap();
@@ -87,8 +84,6 @@ impl ChatService for Shell {
             }
         });
 
-        Box::new(rx.then(|result| {
-            result.expect("futures::sync::mpsc::Receiver cannot generate an error")
-        }))
+        Box::new(rx)
     }
 }

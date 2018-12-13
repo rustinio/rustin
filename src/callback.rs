@@ -1,13 +1,14 @@
 //! Types for extending Rustin's behavior.
 
 use std::cell::RefCell;
+use std::pin::Pin;
 use std::rc::Rc;
 
-use futures::task::Context;
-use futures::{Async, Stream};
+use futures::Stream;
+use futures::task::{LocalWaker, Poll};
 
-use error::Error;
-use message::{IncomingMessage, OutgoingMessage};
+use crate::error::Error;
+use crate::message::{IncomingMessage, OutgoingMessage};
 
 /// A callback that receives incoming messages and reacts to them however it wishes.
 pub trait Callback<S> {
@@ -29,7 +30,7 @@ pub enum Action {
 }
 
 /// An asynchronous stream of actions. This type is returned by callbacks.
-pub type ActionStream = Box<Stream<Item = Action, Error = Error>>;
+pub type ActionStream = Box<Stream<Item = Result<Action, Error>>>;
 
 /// An asynchronous stream of callbacks.
 pub struct Callbacks<S> {
@@ -57,17 +58,16 @@ impl<S> Clone for Callbacks<S> {
 }
 
 impl<S> Stream for Callbacks<S> {
-    type Item = Rc<Box<Callback<S>>>;
-    type Error = Error;
+    type Item = Result<Rc<Box<Callback<S>>>, Error>;
 
-    fn poll_next(&mut self, _cx: &mut Context) -> Result<Async<Option<Self::Item>>, Self::Error> {
+    fn poll_next(self: Pin<&mut Self>, lw: &LocalWaker) -> Poll<Option<Self::Item>> {
         if self.index < self.inner.len() {
             let callback = self.inner[self.index].clone();
             self.index += 1;
 
-            return Ok(Async::Ready(Some(callback)));
+            return Poll::Ready(Some(Ok(callback)));
         } else {
-            return Ok(Async::Ready(None));
+            return Poll::Ready(None);
         }
     }
 }

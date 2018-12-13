@@ -1,11 +1,12 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use futures::prelude::{async, await};
+use futures::stream::StreamExt;
+use futures::task::Poll;
 
-use callback::{Action, Callback, Callbacks};
-use chat_service::ChatService;
-use error::Error;
+use crate::callback::{Action, Callback, Callbacks};
+use crate::chat_service::ChatService;
+use crate::error::Error;
 
 /// A builder for configuring a new `Robot`.
 pub struct Builder<C, S> {
@@ -50,16 +51,13 @@ impl<C, S> Robot<C, S> where C: ChatService + 'static, S: 'static {
     }
 
     /// Starts the robot, connecting to the chat service and listening for incoming messages.
-    #[async]
-    pub fn run(self) -> Result<(), Error> {
-        #[async]
-        for message in self.chat_service.incoming() {
-            #[async]
+    pub async fn run(self) -> Result<(), Error> {
+        let incoming_messages = self.chat_service.incoming();
+        while let Poll::Ready(Some(message)) = await!(StreamExt::next(&mut incoming_messages)) {
             for callback in self.callbacks.clone() {
                 let message = message.clone();
                 let state = self.state.clone();
 
-                #[async]
                 for action in callback.call(message, state) {
                     match action {
                         Action::SendMessage(outgoing) => {

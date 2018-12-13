@@ -2,9 +2,9 @@
 
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
-use callback::Action;
-use room::Room;
-use user::User;
+use crate::callback::Action;
+use crate::room::Room;
+use crate::user::User;
 
 /// An incoming chat message.
 #[derive(Clone, Debug)]
