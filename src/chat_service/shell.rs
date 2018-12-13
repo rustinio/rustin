@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use futures::channel::mpsc::channel;
 use futures::future::{err, ok};
-use futures::{Future, SinkExt, Stream};
+use futures::{Future, Stream};
 
 use super::ChatService;
 use crate::error::Error;

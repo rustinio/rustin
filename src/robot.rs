@@ -1,15 +1,14 @@
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::pin::Unpin;
 
-use futures::stream::StreamExt;
+use futures::stream::{iter, StreamExt};
 
-use crate::callback::{Action, Callback, Callbacks};
+use crate::callback::{Action, Callback};
 use crate::chat_service::ChatService;
 use crate::error::Error;
 
 /// A builder for configuring a new `Robot`.
 pub struct Builder<C, S> {
-    callbacks: Vec<Rc<Box<Callback<S>>>>,
+    callbacks: Vec<Box<Callback<S>>>,
     chat_service: C,
     state: S,
 }
@@ -20,7 +19,7 @@ impl<C, S> Builder<C, S> {
     where
         T: Callback<S> + 'static,
     {
-        self.callbacks.push(Rc::new(Box::new(callback)));
+        self.callbacks.push(Box::new(callback));
 
         self
     }
@@ -28,24 +27,25 @@ impl<C, S> Builder<C, S> {
     /// Creates a `Robot` from the builder.
     pub fn finish(self) -> Robot<C, S> {
         Robot {
-            callbacks: Callbacks::new(self.callbacks),
-            chat_service: Rc::new(self.chat_service),
-            state: Rc::new(RefCell::new(self.state)),
+            callbacks: self.callbacks,
+            chat_service: self.chat_service,
+            state: self.state,
         }
     }
 }
 
 /// The primary driver of a program using Rustin.
 pub struct Robot<C, S> {
-    callbacks: Callbacks<S>,
-    chat_service: Rc<C>,
-    state: Rc<RefCell<S>>,
+    callbacks: Vec<Box<Callback<S>>>,
+    chat_service: C,
+    state: S,
 }
 
 impl<C, S> Robot<C, S>
 where
-    C: ChatService + 'static,
-    S: 'static,
+    C: ChatService + Unpin + 'static,
+    <C as ChatService>::Incoming: Unpin,
+    S: Clone + 'static,
 {
     /// Begins constructing a `Robot`.
     pub fn build(chat_service: C, state: S) -> Builder<C, S> {
@@ -58,15 +58,12 @@ where
 
     /// Starts the robot, connecting to the chat service and listening for incoming messages.
     pub async fn run(self) -> Result<(), Error> {
-        let incoming_messages = self.chat_service.incoming();
+        let mut incoming_messages = self.chat_service.incoming();
+        let mut callbacks = iter(self.callbacks.into_iter());
 
         while let Some(Ok(message)) = await!(StreamExt::next(&mut incoming_messages)) {
-            let callbacks = self.callbacks;
-
-            while let Some(Ok(callback)) = await!(callbacks.next()) {
-                let message = message.clone();
-                let state = self.state.clone();
-                let actions = callback.call(message, state);
+            while let Some(callback) = await!(callbacks.next()) {
+                let mut actions = callback.call(message.clone(), self.state.clone());
 
                 while let Some(Ok(action)) = await!(StreamExt::next(&mut actions)) {
                     match action {

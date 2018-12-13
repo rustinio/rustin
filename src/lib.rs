@@ -1,7 +1,14 @@
 //! Crate `rustin` is an extensible chat bot framework.
 
 #![deny(missing_docs)]
-#![feature(arbitrary_self_types, async_await, await_macro, existential_type, futures_api, pin)]
+#![feature(
+    arbitrary_self_types,
+    async_await,
+    await_macro,
+    existential_type,
+    futures_api,
+    pin
+)]
 
 mod callback;
 pub mod chat_service;
@@ -22,9 +29,6 @@ pub use crate::user::User;
 
 #[cfg(test)]
 mod tests {
-    use std::cell::RefCell;
-    use std::rc::Rc;
-
     use futures::future::ok;
     use futures::stream::{empty, once};
     use futures::{Future, Stream};
@@ -60,7 +64,7 @@ mod tests {
         struct Echo;
 
         impl<S> Callback<S> for Echo {
-            fn call(&self, message: IncomingMessage, _store: Rc<RefCell<S>>) -> ActionStream {
+            fn call(&self, message: IncomingMessage, _store: S) -> ActionStream {
                 Box::new(once(Ok(message.reply(message.body()))))
             }
         }
@@ -89,21 +93,16 @@ mod tests {
         where
             S: Store,
         {
-            fn call(&self, message: IncomingMessage, state: Rc<RefCell<S>>) -> ActionStream {
-                let mut s = match state.try_borrow_mut() {
-                    Ok(s) => s,
-                    Err(_) => return Box::new(once(Err(Error))),
-                };
-
+            fn call(&self, message: IncomingMessage, state: S) -> ActionStream {
                 let id = message.user().id();
 
-                if s.get(id).is_some() {
+                if state.get(id).is_some() {
                     Box::new(once(Ok(message.reply(format!(
                         "Hello again, {}!",
                         message.user().name().unwrap_or(id)
                     )))))
                 } else {
-                    s.set(id, "1");
+                    state.set(id, "1");
 
                     Box::new(empty())
                 }
