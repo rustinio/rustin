@@ -42,20 +42,24 @@ mod tests {
     struct NullChat;
 
     impl ChatService for NullChat {
-        fn join(&self, _room: &Room) -> Box<Future<Item = (), Error = Error>> {
-            Box::new(ok(()))
+        existential type Success: Future<Output = Result<(), Error>>;
+
+        existential type Incoming: Stream<Item = Result<IncomingMessage, Error>>;
+
+        fn join(&self, _room: &Room) -> Self::Success {
+            ok(())
         }
 
-        fn part(&self, _room: &Room) -> Box<Future<Item = (), Error = Error>> {
-            Box::new(ok(()))
+        fn part(&self, _room: &Room) -> Self::Success {
+            ok(())
         }
 
-        fn send_message(&self, _message: OutgoingMessage) -> Box<Future<Item = (), Error = Error>> {
-            Box::new(ok(()))
+        fn send_message(&self, _message: OutgoingMessage) -> Self::Success {
+            ok(())
         }
 
-        fn incoming(&self) -> Box<Stream<Item = IncomingMessage, Error = Error>> {
-            Box::new(empty())
+        fn incoming(&self) -> Self::Incoming {
+            empty()
         }
     }
 
