@@ -1,13 +1,7 @@
 //! Crate `rustin` is an extensible chat bot framework.
 
 #![deny(missing_docs)]
-#![feature(
-    arbitrary_self_types,
-    async_await,
-    await_macro,
-    futures_api,
-    pin
-)]
+#![feature(arbitrary_self_types, async_await, await_macro, futures_api, pin)]
 
 mod callback;
 pub mod chat_service;

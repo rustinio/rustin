@@ -5,7 +5,7 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 pub struct Error;
 
 impl Display for Error {
-    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "unknown error")
     }
 }

@@ -1,5 +1,5 @@
-use futures::future::ok;
 use futures::executor::block_on;
+use futures::future::ok;
 use futures::stream::once;
 use rustin::chat_service::Shell;
 use rustin::message::IncomingMessage;

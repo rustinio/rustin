@@ -8,7 +8,7 @@ use crate::error::Error;
 
 /// A builder for configuring a new `Robot`.
 pub struct Builder<C, S> {
-    callbacks: Vec<Box<Callback<S>>>,
+    callbacks: Vec<Box<dyn Callback<S>>>,
     chat_service: C,
     state: S,
 }
@@ -36,7 +36,7 @@ impl<C, S> Builder<C, S> {
 
 /// The primary driver of a program using Rustin.
 pub struct Robot<C, S> {
-    callbacks: Vec<Box<Callback<S>>>,
+    callbacks: Vec<Box<dyn Callback<S>>>,
     chat_service: C,
     state: S,
 }

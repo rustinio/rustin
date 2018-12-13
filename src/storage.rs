@@ -15,7 +15,7 @@ pub trait Store {
         K: Display + Into<String>,
         V: Into<String>;
     /// Creates a new `Store` that prepends the given prefix to all key names.
-    fn scoped<P>(&mut self, prefix: P) -> ScopedStore<Self>
+    fn scoped<P>(&mut self, prefix: P) -> ScopedStore<'_, Self>
     where
         P: Into<String>,
         Self: Sized;
@@ -56,7 +56,7 @@ impl Store for Memory {
         self.data.insert(key.into(), value.into());
     }
 
-    fn scoped<P>(&mut self, prefix: P) -> ScopedStore<Memory>
+    fn scoped<P>(&mut self, prefix: P) -> ScopedStore<'_, Memory>
     where
         P: Into<String>,
     {
@@ -71,7 +71,7 @@ impl Store for Memory {
 #[derive(Debug)]
 pub struct ScopedStore<'a, S>
 where
-    S: Store + 'a,
+    S: Store,
 {
     parent: &'a mut S,
     prefix: String,
@@ -100,7 +100,7 @@ where
         self.parent.set(key, value);
     }
 
-    fn scoped<P>(&mut self, prefix: P) -> ScopedStore<Self>
+    fn scoped<P>(&mut self, prefix: P) -> ScopedStore<'_, Self>
     where
         P: Into<String>,
         Self: Sized,

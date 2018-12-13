@@ -30,4 +30,4 @@ pub enum Action {
 }
 
 /// An asynchronous stream of actions. This type is returned by callbacks.
-pub type ActionStream = Box<Stream<Item = Result<Action, Error>> + Unpin>;
+pub type ActionStream = Box<dyn Stream<Item = Result<Action, Error>> + Unpin>;

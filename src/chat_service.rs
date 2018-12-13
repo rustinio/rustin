@@ -28,7 +28,7 @@ pub trait ChatService {
 }
 
 /// A type indicating a successful operation with the chat service that has no meaningful return value.
-pub type Success = Box<Future<Output = Result<(), Error>> + Unpin>;
+pub type Success = Box<dyn Future<Output = Result<(), Error>> + Unpin>;
 
 /// An asynchronous stream of incoming messages.
-pub type Incoming = Box<Stream<Item = Result<IncomingMessage, Error>> + Unpin>;
+pub type Incoming = Box<dyn Stream<Item = Result<IncomingMessage, Error>> + Unpin>;

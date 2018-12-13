@@ -106,7 +106,7 @@ impl OutgoingMessage {
 }
 
 impl Display for OutgoingMessage {
-    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "{}", self.body)
     }
 }
