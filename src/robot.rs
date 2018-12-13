@@ -5,6 +5,7 @@ use futures::stream::{iter, StreamExt};
 use crate::callback::{Action, Callback};
 use crate::chat_service::ChatService;
 use crate::error::Error;
+use crate::storage::Store;
 
 /// A builder for configuring a new `Robot`.
 pub struct Builder<C, S> {
@@ -18,6 +19,7 @@ impl<C, S> Builder<C, S> {
     pub fn callback<T>(mut self, callback: T) -> Self
     where
         T: Callback<S> + 'static,
+        S: Store,
     {
         self.callbacks.push(Box::new(callback));
 
@@ -44,6 +46,7 @@ pub struct Robot<C, S> {
 impl<C, S> Robot<C, S>
 where
     C: ChatService + Unpin,
+    S: Store,
 {
     /// Begins constructing a `Robot`.
     pub fn build(chat_service: C, state: S) -> Builder<C, S> {
