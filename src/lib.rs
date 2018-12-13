@@ -68,8 +68,8 @@ mod tests {
         struct Echo;
 
         impl<S> Callback<S> for Echo {
-            fn call(&self, message: IncomingMessage, _store: S) -> ActionStream {
-                Box::new(once(Ok(message.reply(message.body()))))
+            fn call(&self, message: &IncomingMessage, _store: &mut S) -> ActionStream {
+                Box::new(once(ok(message.reply(message.body()))))
             }
         }
 
@@ -80,8 +80,8 @@ mod tests {
 
     #[test]
     fn fn_stateless_callback() {
-        fn echo(message: IncomingMessage) -> ActionStream {
-            Box::new(once(Ok(message.reply(message.body()))))
+        fn echo(message: &IncomingMessage) -> ActionStream {
+            Box::new(once(ok(message.reply(message.body()))))
         }
 
         Robot::build(NullChat, Memory::new())
@@ -97,11 +97,11 @@ mod tests {
         where
             S: Store,
         {
-            fn call(&self, message: IncomingMessage, state: S) -> ActionStream {
+            fn call(&self, message: &IncomingMessage, state: &mut S) -> ActionStream {
                 let id = message.user().id();
 
                 if state.get(id).is_some() {
-                    Box::new(once(Ok(message.reply(format!(
+                    Box::new(once(ok(message.reply(format!(
                         "Hello again, {}!",
                         message.user().name().unwrap_or(id)
                     )))))
