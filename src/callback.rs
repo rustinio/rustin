@@ -6,19 +6,30 @@ use futures::Stream;
 
 use crate::error::Error;
 use crate::message::{IncomingMessage, OutgoingMessage};
+use crate::storage::Store;
 
 /// A callback that receives incoming messages and reacts to them however it wishes.
-pub trait Callback<S> {
+pub trait Callback<S, K> {
     /// Invokes the callback with the incoming message that triggered it.
     fn call(&self, message: &IncomingMessage, state: &mut S) -> ActionStream;
 }
 
-impl<F, S> Callback<S> for F
+impl<F, S> Callback<S, (IncomingMessage,)> for F
 where
     F: Fn(&IncomingMessage) -> ActionStream,
 {
     fn call(&self, message: &IncomingMessage, _state: &mut S) -> ActionStream {
         self(message)
+    }
+}
+
+impl<F, S> Callback<S, (IncomingMessage, S)> for F
+where
+    F: Fn(&IncomingMessage, &mut S) -> ActionStream,
+    S: Store,
+{
+    fn call(&self, message: &IncomingMessage, state: &mut S) -> ActionStream {
+        self(message, state)
     }
 }
 

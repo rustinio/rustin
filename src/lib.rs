@@ -55,7 +55,7 @@ mod tests {
     fn manual_stateless_callback() {
         struct Echo;
 
-        impl<S> Callback<S> for Echo {
+        impl<S> Callback<S, (IncomingMessage,)> for Echo {
             fn call(&self, message: &IncomingMessage, _store: &mut S) -> ActionStream {
                 Box::new(once(ok(message.reply(message.body()))))
             }
@@ -81,7 +81,7 @@ mod tests {
     fn manual_stateful_callback() {
         struct WelcomeBack;
 
-        impl<S> Callback<S> for WelcomeBack
+        impl<S> Callback<S, (IncomingMessage, S)> for WelcomeBack
         where
             S: Store,
         {
@@ -103,6 +103,28 @@ mod tests {
 
         Robot::build(NullChat, Memory::new())
             .callback(WelcomeBack)
+            .finish();
+    }
+
+    #[test]
+    fn fn_stateful_callback() {
+        fn echo<S>(message: &IncomingMessage, state: &mut S) -> ActionStream where S: Store {
+            let id = message.user().id();
+
+            if state.get(id).is_some() {
+                Box::new(once(ok(message.reply(format!(
+                    "Hello again, {}!",
+                    message.user().name().unwrap_or(id)
+                )))))
+            } else {
+                state.set(id, "1");
+
+                Box::new(empty())
+            }
+        }
+
+        Robot::build(NullChat, Memory::new())
+            .callback(echo)
             .finish();
     }
 }

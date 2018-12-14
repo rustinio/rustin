@@ -8,17 +8,17 @@ use crate::error::Error;
 use crate::storage::Store;
 
 /// A builder for configuring a new `Robot`.
-pub struct Builder<C, S> {
-    callbacks: Vec<Box<dyn Callback<S>>>,
+pub struct Builder<C, S, K> {
+    callbacks: Vec<Box<dyn Callback<S, K>>>,
     chat_service: C,
     state: S,
 }
 
-impl<C, S> Builder<C, S> {
+impl<C, S, K> Builder<C, S, K> {
     /// Adds a callback.
     pub fn callback<T>(mut self, callback: T) -> Self
     where
-        T: Callback<S> + 'static,
+        T: Callback<S, K> + 'static,
         S: Store,
     {
         self.callbacks.push(Box::new(callback));
@@ -27,7 +27,7 @@ impl<C, S> Builder<C, S> {
     }
 
     /// Creates a `Robot` from the builder.
-    pub fn finish(self) -> Robot<C, S> {
+    pub fn finish(self) -> Robot<C, S, K> {
         Robot {
             callbacks: self.callbacks,
             chat_service: self.chat_service,
@@ -37,19 +37,19 @@ impl<C, S> Builder<C, S> {
 }
 
 /// The primary driver of a program using Rustin.
-pub struct Robot<C, S> {
-    callbacks: Vec<Box<dyn Callback<S>>>,
+pub struct Robot<C, S, K> {
+    callbacks: Vec<Box<dyn Callback<S, K>>>,
     chat_service: C,
     state: S,
 }
 
-impl<C, S> Robot<C, S>
+impl<C, S, K> Robot<C, S, K>
 where
     C: ChatService + Unpin,
     S: Store,
 {
     /// Begins constructing a `Robot`.
-    pub fn build(chat_service: C, state: S) -> Builder<C, S> {
+    pub fn build(chat_service: C, state: S) -> Builder<C, S, K> {
         Builder {
             callbacks: Vec::new(),
             chat_service,
