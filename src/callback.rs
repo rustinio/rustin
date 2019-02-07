@@ -1,6 +1,6 @@
 //! Types for extending Rustin's behavior.
 
-use std::pin::Unpin;
+use std::marker::Unpin;
 
 use futures::Stream;
 

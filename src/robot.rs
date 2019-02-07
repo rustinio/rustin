@@ -1,4 +1,4 @@
-use std::pin::Unpin;
+use std::marker::Unpin;
 
 use futures::stream::{iter, StreamExt};
 

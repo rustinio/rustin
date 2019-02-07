@@ -1,6 +1,6 @@
 //! Types for connecting Rustin to a chat service.
 
-use std::pin::Unpin;
+use std::marker::Unpin;
 
 use futures::{Future, Stream};
 
