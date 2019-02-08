@@ -1,16 +1,22 @@
 //! Types for persisting data.
 
 use std::collections::HashMap;
+use std::error::Error as StdError;
 use std::fmt::Display;
+
+use crate::error::Error;
 
 /// Persistent data storage for the robot.
 pub trait Store {
+    /// An error encountered when interacting with the underlying data store.
+    type Error: StdError;
+
     /// Gets the value of the given key, if any.
-    fn get<K>(&self, key: K) -> Option<&str>
+    fn get<K>(&self, key: K) -> Result<Option<String>, Self::Error>
     where
         K: AsRef<str> + Display;
     /// Sets the given key to the given value.
-    fn set<K, V>(&mut self, key: K, value: V)
+    fn set<K, V>(&mut self, key: K, value: V) -> Result<(), Self::Error>
     where
         K: Display + Into<String>,
         V: Into<String>;
@@ -41,19 +47,22 @@ impl Memory {
 }
 
 impl Store for Memory {
-    fn get<K>(&self, key: K) -> Option<&str>
+    type Error = Error;
+
+    fn get<K>(&self, key: K) -> Result<Option<String>, Self::Error>
     where
         K: AsRef<str> + Display,
     {
-        self.data.get(key.as_ref()).map(|value| value.as_str())
+        Ok(self.data.get(key.as_ref()).map(|value| value.clone()))
     }
 
-    fn set<K, V>(&mut self, key: K, value: V)
+    fn set<K, V>(&mut self, key: K, value: V) -> Result<(), Self::Error>
     where
         K: Display + Into<String>,
         V: Into<String>,
     {
         self.data.insert(key.into(), value.into());
+        Ok(())
     }
 
     fn scoped<P>(&mut self, prefix: P) -> ScopedStore<'_, Memory>
@@ -81,7 +90,9 @@ impl<'a, S> Store for ScopedStore<'a, S>
 where
     S: Store,
 {
-    fn get<K>(&self, key: K) -> Option<&str>
+    type Error = S::Error;
+
+    fn get<K>(&self, key: K) -> Result<Option<String>, Self::Error>
     where
         K: AsRef<str> + Display,
     {
@@ -90,14 +101,14 @@ where
         self.parent.get(key)
     }
 
-    fn set<K, V>(&mut self, key: K, value: V)
+    fn set<K, V>(&mut self, key: K, value: V) -> Result<(), Self::Error>
     where
         K: Display + Into<String>,
         V: Into<String>,
     {
         let key = format!("{}{}{}", self.prefix, self.parent.seperator(), key);
 
-        self.parent.set(key, value);
+        self.parent.set(key, value)
     }
 
     fn scoped<P>(&mut self, prefix: P) -> ScopedStore<'_, Self>

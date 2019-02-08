@@ -1,3 +1,4 @@
+use std::error::Error as StdError;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
 /// An error generated while the robot is running.
@@ -9,3 +10,5 @@ impl Display for Error {
         write!(f, "unknown error")
     }
 }
+
+impl StdError for Error {}
