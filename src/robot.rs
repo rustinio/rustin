@@ -11,7 +11,7 @@ use crate::storage::Store;
 pub struct Builder<C, S, K> {
     callbacks: Vec<Box<dyn Callback<S, K>>>,
     chat_service: C,
-    state: S,
+    store: S,
 }
 
 impl<C, S, K> Builder<C, S, K> {
@@ -31,7 +31,7 @@ impl<C, S, K> Builder<C, S, K> {
         Robot {
             callbacks: self.callbacks,
             chat_service: self.chat_service,
-            state: self.state,
+            store: self.store,
         }
     }
 }
@@ -40,7 +40,7 @@ impl<C, S, K> Builder<C, S, K> {
 pub struct Robot<C, S, K> {
     callbacks: Vec<Box<dyn Callback<S, K>>>,
     chat_service: C,
-    state: S,
+    store: S,
 }
 
 impl<C, S, K> Robot<C, S, K>
@@ -49,11 +49,11 @@ where
     S: Store,
 {
     /// Begins constructing a `Robot`.
-    pub fn build(chat_service: C, state: S) -> Builder<C, S, K> {
+    pub fn build(chat_service: C, store: S) -> Builder<C, S, K> {
         Builder {
             callbacks: Vec::new(),
             chat_service,
-            state,
+            store,
         }
     }
 
@@ -64,7 +64,7 @@ where
 
         while let Some(Ok(message)) = await!(StreamExt::next(&mut incoming_messages)) {
             while let Some(callback) = await!(callbacks.next()) {
-                let mut actions = callback.call(&message, &mut self.state);
+                let mut actions = callback.call(&message, &mut self.store);
 
                 while let Some(Ok(action)) = await!(StreamExt::next(&mut actions)) {
                     match action {
