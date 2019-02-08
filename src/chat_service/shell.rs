@@ -3,12 +3,10 @@ use std::thread;
 use std::time::Duration;
 
 use futures::channel::mpsc::channel;
-use futures::future::{err, ok};
+use futures::future::ok;
 
 use super::{ChatService, Incoming, Success};
-use crate::error::Error;
 use crate::message::{IncomingMessage, OutgoingMessage, Source};
-use crate::room::Room;
 use crate::user::User;
 
 /// An adapter that runs in your shell.
@@ -16,14 +14,6 @@ use crate::user::User;
 pub struct Shell;
 
 impl ChatService for Shell {
-    fn join(&self, _room: &Room) -> Success {
-        Box::new(err(Error))
-    }
-
-    fn part(&self, _room: &Room) -> Success {
-        Box::new(err(Error))
-    }
-
     fn send_message(&self, message: OutgoingMessage) -> Success {
         println!("{}", message);
 

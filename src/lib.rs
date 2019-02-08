@@ -28,20 +28,12 @@ mod tests {
     use super::chat_service::{ChatService, Incoming, Success};
     use super::message::{IncomingMessage, OutgoingMessage};
     use super::storage::{Memory, Store};
-    use super::{ActionStream, Callback, Robot, Room};
+    use super::{ActionStream, Callback, Robot};
 
     #[derive(Clone, Debug)]
     struct NullChat;
 
     impl ChatService for NullChat {
-        fn join(&self, _room: &Room) -> Success {
-            Box::new(ok(()))
-        }
-
-        fn part(&self, _room: &Room) -> Success {
-            Box::new(ok(()))
-        }
-
         fn send_message(&self, _message: OutgoingMessage) -> Success {
             Box::new(ok(()))
         }
