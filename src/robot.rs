@@ -5,7 +5,7 @@ use futures::stream::{iter, StreamExt};
 use crate::callback::{Action, Callback};
 use crate::chat_service::ChatService;
 use crate::error::Error;
-use crate::storage::Store;
+use crate::store::Store;
 
 /// A builder for configuring a new `Robot`.
 pub struct Builder<C, S, K> {

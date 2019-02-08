@@ -6,7 +6,7 @@ use futures::Stream;
 
 use crate::error::Error;
 use crate::message::{IncomingMessage, OutgoingMessage};
-use crate::storage::Store;
+use crate::store::Store;
 
 /// A callback that receives incoming messages and reacts to them however it wishes.
 pub trait Callback<S, K> {

@@ -10,7 +10,7 @@ mod error;
 pub mod message;
 mod robot;
 mod room;
-pub mod storage;
+pub mod store;
 mod user;
 
 pub use crate::callback::{Action, ActionStream, Callback};
@@ -27,7 +27,7 @@ mod tests {
 
     use super::chat_service::{ChatService, Incoming, Success};
     use super::message::{IncomingMessage, OutgoingMessage};
-    use super::storage::{Memory, Store};
+    use super::store::{Memory, Store};
     use super::{ActionStream, Callback, Robot};
 
     #[derive(Clone, Debug)]

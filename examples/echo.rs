@@ -3,7 +3,7 @@ use futures::future::ok;
 use futures::stream::once;
 use rustin::chat_service::Shell;
 use rustin::message::IncomingMessage;
-use rustin::storage::Memory;
+use rustin::store::Memory;
 use rustin::{ActionStream, Robot};
 
 fn echo(message: &IncomingMessage) -> ActionStream {

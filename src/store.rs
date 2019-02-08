@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 use std::fmt::Display;
 
-/// Persistent storage for the robot.
+/// Persistent data storage for the robot.
 pub trait Store {
     /// Gets the value of the given key, if any.
     fn get<K>(&self, key: K) -> Option<&str>
