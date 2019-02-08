@@ -31,7 +31,6 @@ pub trait MultiRoomChatService: ChatService {
 
     /// Makes Rustin part from a chat room.
     fn part(&self, room: &Room) -> Success;
-
 }
 
 /// A type indicating a successful operation with the chat service that has no meaningful return value.

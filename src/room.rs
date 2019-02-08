@@ -1,7 +1,7 @@
 //! The type for chat rooms.
 
 /// A chat room.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct Room {
     /// A unique identifier for the room.
     id: String,

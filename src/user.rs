@@ -1,7 +1,7 @@
 //! The type for chat users.
 
 /// A user of a chat service.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct User {
     /// A unique identifier for the user.
     id: String,
