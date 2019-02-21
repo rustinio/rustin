@@ -26,7 +26,6 @@ pub use crate::{
 #[cfg(test)]
 mod tests {
     use futures::future::{ok, ready};
-    use futures::prelude::*;
     use futures::stream::{empty, once};
 
     use super::chat_service::{ChatService, Incoming, Success};
@@ -52,7 +51,7 @@ mod tests {
         struct Echo;
 
         impl<S> Callback<S, (IncomingMessage,)> for Echo {
-            fn call(&self, message: &IncomingMessage, _store: &mut S) -> FutureActionStream {
+            fn call(&self, message: &IncomingMessage, _store: &S) -> FutureActionStream {
                 let body = message.body();
                 let reply = message.reply(body);
                 let future_reply = ready(reply);
@@ -83,72 +82,90 @@ mod tests {
             .finish();
     }
 
-    // #[test]
-    // fn manual_stateful_callback() {
-    //     struct WelcomeBack;
+    #[test]
+    fn manual_stateful_callback() {
+        struct WelcomeBack;
 
-    //     impl<S> Callback<S, (IncomingMessage, S)> for WelcomeBack
-    //     where
-    //         S: Store,
-    //     {
-    //         fn call(&self, message: &IncomingMessage, store: &mut S) -> FutureActionStream {
-    //             let id = message.user().id();
+        impl<S> Callback<S, (IncomingMessage, S)> for WelcomeBack
+        where
+            S: Store,
+        {
+            fn call(&self, message: &IncomingMessage, store: &S) -> FutureActionStream {
+                let message = message.clone();
+                let id = message.user().id().to_owned();
+                let store = store.clone();
 
-    //             Box::new(store.get(id).then(|result| {
-    //                 match result {
-    //                     Ok(Some(id)) => {
-    //                         let reply = message.reply(format!(
-    //                             "Hello again, {}!",
-    //                             message.user().name().unwrap_or(&id)
-    //                             ));
-    //                         let future_reply = ready(reply);
-    //                         let stream = Box::new(once(future_reply)) as ActionStream;
+                let future = async move {
+                    match await!(store.get(&id)) {
+                        Ok(Some(id)) => {
+                            let reply = message.reply(format!(
+                                "Hello again, {}!",
+                                message.user().name().unwrap_or(&id)
+                            ));
+                            let future_reply = ready(reply);
+                            let stream = Box::pin(once(future_reply)) as ActionStream;
 
-    //                         Box::new(ok(stream))
-    //                     }
-    //                     Ok(None) => {
-    //                         if let Err(_) = await!(store.set(id, "1")) {
-    //                             panic!("store error");
-    //                         }
+                            Ok(stream)
+                        }
+                        Ok(None) => {
+                            if let Err(_) = await!(store.set(id, "1")) {
+                                panic!("store error");
+                            }
 
-    //                         Box::new(empty())
-    //                     }
-    //                     Err(_) => panic!("store error"),
-    //                 }
-    //             }))
-    //         }
-    //     }
+                            let stream = Box::pin(empty()) as ActionStream;
 
-    //     Robot::build(NullChat, Memory::new())
-    //         .callback(WelcomeBack)
-    //         .finish();
-    // }
+                            Ok(stream)
+                        }
+                        Err(_) => panic!("store error"),
+                    }
+                };
 
-    // #[test]
-    // fn fn_stateful_callback() {
-    //     fn echo<S>(message: &IncomingMessage, store: &mut S) -> FutureActionStream where S: Store {
-    //         let id = message.user().id();
+                Box::pin(future)
+            }
+        }
 
-    //         store.get(id).then(|result| {
-    //             match result {
-    //                 Ok(Some(id)) =>  {
-    //                     Box::new(once(ok(message.reply(format!(
-    //                         "Hello again, {}!",
-    //                         message.user().name().unwrap_or(&id)
-    //                     ))))) as FutureActionStream
-    //                 }
-    //                 Ok(None) => {
-    //                     store.set(id, "1");
+        Robot::build(NullChat, Memory::new())
+            .callback(WelcomeBack)
+            .finish();
+    }
 
-    //                     Box::new(empty()) as FutureActionStream
-    //                 }
-    //                 _ => panic!("store error"),
-    //             }
-    //         }).into_stream()
-    //     }
+    #[test]
+    fn fn_stateful_callback() {
+        fn echo<S>(message: &IncomingMessage, store: &S) -> FutureActionStream where S: Store {
+            let message = message.clone();
+            let id = message.user().id().to_owned();
+            let store = store.clone();
 
-    //     Robot::build(NullChat, Memory::new())
-    //         .callback(echo)
-    //         .finish();
-    // }
+            let future = async move {
+                match await!(store.get(&id)) {
+                    Ok(Some(id)) => {
+                        let reply = message.reply(format!(
+                            "Hello again, {}!",
+                            message.user().name().unwrap_or(&id)
+                        ));
+                        let future_reply = ready(reply);
+                        let stream = Box::pin(once(future_reply)) as ActionStream;
+
+                        Ok(stream)
+                    }
+                    Ok(None) => {
+                        if let Err(_) = await!(store.set(id, "1")) {
+                            panic!("store error");
+                        }
+
+                        let stream = Box::pin(empty()) as ActionStream;
+
+                        Ok(stream)
+                    }
+                    Err(_) => panic!("store error"),
+                }
+            };
+
+            Box::pin(future)
+        }
+
+        Robot::build(NullChat, Memory::new())
+            .callback(echo)
+            .finish();
+    }
 }

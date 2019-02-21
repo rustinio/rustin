@@ -56,13 +56,13 @@ where
     }
 
     /// Starts the robot, connecting to the chat service and listening for incoming messages.
-    pub async fn run(mut self) -> Result<(), Error> {
+    pub async fn run(self) -> Result<(), Error> {
         let mut incoming_messages = self.chat_service.incoming();
         let mut callbacks = iter(self.callbacks.into_iter());
 
         while let Some(Ok(message)) = await!(StreamExt::next(&mut incoming_messages)) {
             while let Some(callback) = await!(callbacks.next()) {
-                if let Ok(mut actions) = await!(callback.call(&message, &mut self.store)) {
+                if let Ok(mut actions) = await!(callback.call(&message, &self.store)) {
                     while let Some(action) = await!(StreamExt::next(&mut actions)) {
                         match action {
                             Action::SendMessage(outgoing) => {

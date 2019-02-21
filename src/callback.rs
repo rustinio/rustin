@@ -11,24 +11,24 @@ use crate::store::Store;
 /// A callback that receives incoming messages and reacts to them however it wishes.
 pub trait Callback<S, K> {
     /// Invokes the callback with the incoming message that triggered it.
-    fn call(&self, message: &IncomingMessage, store: &mut S) -> FutureActionStream;
+    fn call(&self, message: &IncomingMessage, store: &S) -> FutureActionStream;
 }
 
 impl<F, S> Callback<S, (IncomingMessage,)> for F
 where
     F: Fn(&IncomingMessage) -> FutureActionStream,
 {
-    fn call(&self, message: &IncomingMessage, _store: &mut S) -> FutureActionStream {
+    fn call(&self, message: &IncomingMessage, _store: &S) -> FutureActionStream {
         self(message)
     }
 }
 
 impl<F, S> Callback<S, (IncomingMessage, S)> for F
 where
-    F: Fn(&IncomingMessage, &mut S) -> FutureActionStream,
+    F: Fn(&IncomingMessage, &S) -> FutureActionStream,
     S: Store,
 {
-    fn call(&self, message: &IncomingMessage, store: &mut S) -> FutureActionStream {
+    fn call(&self, message: &IncomingMessage, store: &S) -> FutureActionStream {
         self(message, store)
     }
 }

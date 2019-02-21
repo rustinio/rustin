@@ -5,27 +5,28 @@ use std::error::Error as StdError;
 use std::fmt::Display;
 use std::future::Future;
 use std::pin::Pin;
+use std::sync::{Arc, RwLock};
 
-use futures::future::ok;
+use futures::future::{err, ok};
 
 use crate::error::Error;
 
 /// Persistent data storage for the robot.
-pub trait Store {
+pub trait Store: Clone + Send + Sync + 'static {
     /// An error encountered when interacting with the underlying data store.
-    type Error: StdError;
+    type Error: Clone + StdError + Send + Sync + 'static;
 
     /// Gets the value of the given key, if any.
     fn get<K>(&self, key: K) -> Pin<Box<dyn Future<Output = Result<Option<String>, Self::Error>>>>
     where
         K: AsRef<str> + Display;
     /// Sets the given key to the given value.
-    fn set<K, V>(&mut self, key: K, value: V) -> Pin<Box<dyn Future<Output = Result<(), Self::Error>>>>
+    fn set<K, V>(&self, key: K, value: V) -> Pin<Box<dyn Future<Output = Result<(), Self::Error>>>>
     where
         K: Display + Into<String>,
         V: Into<String>;
     /// Creates a new `Store` that prepends the given prefix to all key names.
-    fn scoped<P>(&mut self, prefix: P) -> ScopedStore<'_, Self>
+    fn scoped<P>(&self, prefix: P) -> ScopedStore<Self>
     where
         P: Into<String>,
         Self: Sized;
@@ -36,16 +37,16 @@ pub trait Store {
 }
 
 /// A `Store` that lives in program memory, emptying when the program exits.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Memory {
-    data: HashMap<String, String>,
+    data: Arc<RwLock<HashMap<String, String>>>,
 }
 
 impl Memory {
     /// Creates a new `Memory`.
     pub fn new() -> Self {
         Memory {
-            data: HashMap::new(),
+            data: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 }
@@ -57,40 +58,53 @@ impl Store for Memory {
     where
         K: AsRef<str> + Display,
     {
-        Box::pin(ok(self.data.get(key.as_ref()).map(|value| value.clone())))
+        let future = match self.data.read() {
+            Ok(data) => ok(data.get(key.as_ref()).map(|value| value.clone())),
+            Err(_) => err(Error),
+        };
+
+        Box::pin(future)
     }
 
-    fn set<K, V>(&mut self, key: K, value: V) -> Pin<Box<dyn Future<Output = Result<(), Self::Error>>>>
+    fn set<K, V>(&self, key: K, value: V) -> Pin<Box<dyn Future<Output = Result<(), Self::Error>>>>
     where
         K: Display + Into<String>,
         V: Into<String>,
     {
-        self.data.insert(key.into(), value.into());
-        Box::pin(ok(()))
+        let future = match self.data.write() {
+            Ok(mut data) => {
+                data.insert(key.into(), value.into());
+
+                ok(())
+            }
+            Err(_) => err(Error),
+        };
+
+        Box::pin(future)
     }
 
-    fn scoped<P>(&mut self, prefix: P) -> ScopedStore<'_, Memory>
+    fn scoped<P>(&self, prefix: P) -> ScopedStore<Memory>
     where
         P: Into<String>,
     {
         ScopedStore {
-            parent: self,
+            parent: self.clone(),
             prefix: prefix.into(),
         }
     }
 }
 
 /// A `Store` that persists data into a parent store, prepending a prefix to all key names.
-#[derive(Debug)]
-pub struct ScopedStore<'a, S>
+#[derive(Clone, Debug)]
+pub struct ScopedStore<S>
 where
     S: Store,
 {
-    parent: &'a mut S,
+    parent: S,
     prefix: String,
 }
 
-impl<'a, S> Store for ScopedStore<'a, S>
+impl<S> Store for ScopedStore<S>
 where
     S: Store,
 {
@@ -105,7 +119,7 @@ where
         self.parent.get(key)
     }
 
-    fn set<K, V>(&mut self, key: K, value: V) -> Pin<Box<dyn Future<Output = Result<(), Self::Error>>>>
+    fn set<K, V>(&self, key: K, value: V) -> Pin<Box<dyn Future<Output = Result<(), Self::Error>>>>
     where
         K: Display + Into<String>,
         V: Into<String>,
@@ -115,13 +129,13 @@ where
         self.parent.set(key, value)
     }
 
-    fn scoped<P>(&mut self, prefix: P) -> ScopedStore<'_, Self>
+    fn scoped<P>(&self, prefix: P) -> ScopedStore<Self>
     where
         P: Into<String>,
         Self: Sized,
     {
         ScopedStore {
-            parent: self,
+            parent: self.clone(),
             prefix: prefix.into(),
         }
     }
