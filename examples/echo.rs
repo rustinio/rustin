@@ -8,7 +8,7 @@ fn echo(message: &IncomingMessage) -> FutureActionStream {
     let body = message.body();
     let reply = message.reply(body);
 
-    reply.into_future_action_stream()
+    reply.into()
 }
 
 fn main() {

@@ -55,7 +55,7 @@ mod tests {
                 let body = message.body();
                 let reply = message.reply(body);
 
-                reply.into_future_action_stream()
+                reply.into()
             }
         }
 
@@ -70,7 +70,7 @@ mod tests {
             let body = message.body();
             let reply = message.reply(body);
 
-            reply.into_future_action_stream()
+            reply.into()
         }
 
         Robot::build(NullChat, Memory::new())
@@ -98,7 +98,7 @@ mod tests {
                                 "Hello again, {}!",
                                 message.user().name().unwrap_or(&id)
                             ));
-                            let stream = reply.into_action_stream();
+                            let stream = reply.into();
 
                             Ok(stream)
                         }
@@ -141,7 +141,7 @@ mod tests {
                             "Hello again, {}!",
                             message.user().name().unwrap_or(&id)
                         ));
-                        let stream = reply.into_action_stream();
+                        let stream = reply.into();
 
                         Ok(stream)
                     }

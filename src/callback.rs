@@ -50,15 +50,17 @@ impl Action {
     pub fn empty_stream() -> ActionStream {
         Box::pin(empty())
     }
+}
 
-    /// Convenience method for converting a single action into an `ActionStream`.
-    pub fn into_action_stream(self) -> ActionStream {
+impl Into<ActionStream> for Action {
+    fn into(self) -> ActionStream {
         Box::pin(once(ready(self)))
     }
+}
 
-    /// Convenience method for converting a single action into a `FutureActionStream`.
-    pub fn into_future_action_stream(self) -> FutureActionStream {
-        Box::pin(ok(self.into_action_stream()))
+impl Into<FutureActionStream> for Action {
+    fn into(self) -> FutureActionStream {
+        Box::pin(ok(self.into()))
     }
 }
 
