@@ -25,13 +25,13 @@ pub use crate::{
 
 #[cfg(test)]
 mod tests {
-    use futures::future::{ok, ready};
-    use futures::stream::{empty, once};
+    use futures::future::ok;
+    use futures::stream::empty;
 
     use super::chat_service::{ChatService, Incoming, Success};
     use super::message::{IncomingMessage, OutgoingMessage};
     use super::store::{Memory, Store};
-    use super::{ActionStream, Callback, FutureActionStream, Robot};
+    use super::{Action, Callback, FutureActionStream, Robot};
 
     #[derive(Clone, Debug)]
     struct NullChat;
@@ -54,10 +54,8 @@ mod tests {
             fn call(&self, message: &IncomingMessage, _store: &S) -> FutureActionStream {
                 let body = message.body();
                 let reply = message.reply(body);
-                let future_reply = ready(reply);
-                let stream = Box::pin(once(future_reply)) as ActionStream;
 
-                Box::pin(ok(stream))
+                reply.into_future_action_stream()
             }
         }
 
@@ -71,10 +69,8 @@ mod tests {
         fn echo(message: &IncomingMessage) -> FutureActionStream {
                 let body = message.body();
                 let reply = message.reply(body);
-                let future_reply = ready(reply);
-                let stream = Box::pin(once(future_reply)) as ActionStream;
 
-                Box::pin(ok(stream))
+                reply.into_future_action_stream()
         }
 
         Robot::build(NullChat, Memory::new())
@@ -102,8 +98,7 @@ mod tests {
                                 "Hello again, {}!",
                                 message.user().name().unwrap_or(&id)
                             ));
-                            let future_reply = ready(reply);
-                            let stream = Box::pin(once(future_reply)) as ActionStream;
+                            let stream = reply.into_action_stream();
 
                             Ok(stream)
                         }
@@ -112,7 +107,7 @@ mod tests {
                                 panic!("store error");
                             }
 
-                            let stream = Box::pin(empty()) as ActionStream;
+                            let stream = Action::empty_stream();
 
                             Ok(stream)
                         }
@@ -143,8 +138,7 @@ mod tests {
                             "Hello again, {}!",
                             message.user().name().unwrap_or(&id)
                         ));
-                        let future_reply = ready(reply);
-                        let stream = Box::pin(once(future_reply)) as ActionStream;
+                        let stream = reply.into_action_stream();
 
                         Ok(stream)
                     }
@@ -153,7 +147,7 @@ mod tests {
                             panic!("store error");
                         }
 
-                        let stream = Box::pin(empty()) as ActionStream;
+                        let stream = Action::empty_stream();
 
                         Ok(stream)
                     }

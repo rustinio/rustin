@@ -2,7 +2,12 @@
 
 use std::pin::Pin;
 
-use futures::{Future, Stream};
+use futures::{
+    future::{ok, ready},
+    stream::{once, empty},
+    Future,
+    Stream,
+};
 
 use crate::error::Error;
 use crate::message::{IncomingMessage, OutgoingMessage};
@@ -38,6 +43,24 @@ where
 pub enum Action {
     /// Sends a message to the chat service.
     SendMessage(OutgoingMessage),
+}
+
+
+impl Action {
+    /// Convenience method for creating an empty `ActionStream`.
+    pub fn empty_stream() -> ActionStream {
+        Box::pin(empty())
+    }
+
+    /// Convenience method for converting a single action into an `ActionStream`.
+    pub fn into_action_stream(self) -> ActionStream {
+        Box::pin(once(ready(self)))
+    }
+
+    /// Convenience method for converting a single action into a `FutureActionStream`.
+    pub fn into_future_action_stream(self) -> FutureActionStream {
+        Box::pin(ok(self.into_action_stream()))
+    }
 }
 
 /// An asynchronous stream of actions initiated by a callback.
