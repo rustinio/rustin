@@ -13,22 +13,26 @@ mod room;
 pub mod store;
 mod user;
 
-pub use crate::callback::{Action, ActionStream, Callback};
-pub use crate::config::Config;
-pub use crate::error::Error;
-pub use crate::robot::{Builder, Robot};
-pub use crate::room::Room;
-pub use crate::user::User;
+pub use crate::{
+    callback::{Action, ActionStream, Callback, FutureActionStream},
+    config::Config,
+    error::Error,
+    robot::{Builder, Robot},
+    room::Room,
+    user::User,
+    store::Store,
+};
 
 #[cfg(test)]
 mod tests {
-    use futures::future::ok;
+    use futures::future::{ok, ready};
+    use futures::prelude::*;
     use futures::stream::{empty, once};
 
     use super::chat_service::{ChatService, Incoming, Success};
     use super::message::{IncomingMessage, OutgoingMessage};
     use super::store::{Memory, Store};
-    use super::{ActionStream, Callback, Robot};
+    use super::{ActionStream, Callback, FutureActionStream, Robot};
 
     #[derive(Clone, Debug)]
     struct NullChat;
@@ -48,8 +52,13 @@ mod tests {
         struct Echo;
 
         impl<S> Callback<S, (IncomingMessage,)> for Echo {
-            fn call(&self, message: &IncomingMessage, _store: &mut S) -> ActionStream {
-                Box::new(once(ok(message.reply(message.body()))))
+            fn call(&self, message: &IncomingMessage, _store: &mut S) -> FutureActionStream {
+                let body = message.body();
+                let reply = message.reply(body);
+                let future_reply = ready(reply);
+                let stream = Box::new(once(future_reply)) as ActionStream;
+
+                Box::new(ok(stream))
             }
         }
 
@@ -60,8 +69,13 @@ mod tests {
 
     #[test]
     fn fn_stateless_callback() {
-        fn echo(message: &IncomingMessage) -> ActionStream {
-            Box::new(once(ok(message.reply(message.body()))))
+        fn echo(message: &IncomingMessage) -> FutureActionStream {
+                let body = message.body();
+                let reply = message.reply(body);
+                let future_reply = ready(reply);
+                let stream = Box::new(once(future_reply)) as ActionStream;
+
+                Box::new(ok(stream))
         }
 
         Robot::build(NullChat, Memory::new())
@@ -77,19 +91,31 @@ mod tests {
         where
             S: Store,
         {
-            fn call(&self, message: &IncomingMessage, store: &mut S) -> ActionStream {
+            fn call(&self, message: &IncomingMessage, store: &mut S) -> FutureActionStream {
                 let id = message.user().id();
 
-                if store.get(id).is_some() {
-                    Box::new(once(ok(message.reply(format!(
-                        "Hello again, {}!",
-                        message.user().name().unwrap_or(id)
-                    )))))
-                } else {
-                    store.set(id, "1");
+                Box::new(store.get(id).then(|result| {
+                    match result {
+                        Ok(Some(id)) => {
+                            let reply = message.reply(format!(
+                                "Hello again, {}!",
+                                message.user().name().unwrap_or(&id)
+                                ));
+                            let future_reply = ready(reply);
+                            let stream = Box::new(once(future_reply)) as ActionStream;
 
-                    Box::new(empty())
-                }
+                            Box::new(ok(stream))
+                        }
+                        Ok(None) => {
+                            if let Err(_) = await!(store.set(id, "1")) {
+                                panic!("store error");
+                            }
+
+                            Box::new(empty())
+                        }
+                        Err(_) => panic!("store error"),
+                    }
+                }))
             }
         }
 
@@ -98,25 +124,31 @@ mod tests {
             .finish();
     }
 
-    #[test]
-    fn fn_stateful_callback() {
-        fn echo<S>(message: &IncomingMessage, store: &mut S) -> ActionStream where S: Store {
-            let id = message.user().id();
+    // #[test]
+    // fn fn_stateful_callback() {
+    //     fn echo<S>(message: &IncomingMessage, store: &mut S) -> FutureActionStream where S: Store {
+    //         let id = message.user().id();
 
-            if store.get(id).is_some() {
-                Box::new(once(ok(message.reply(format!(
-                    "Hello again, {}!",
-                    message.user().name().unwrap_or(id)
-                )))))
-            } else {
-                store.set(id, "1");
+    //         store.get(id).then(|result| {
+    //             match result {
+    //                 Ok(Some(id)) =>  {
+    //                     Box::new(once(ok(message.reply(format!(
+    //                         "Hello again, {}!",
+    //                         message.user().name().unwrap_or(&id)
+    //                     ))))) as FutureActionStream
+    //                 }
+    //                 Ok(None) => {
+    //                     store.set(id, "1");
 
-                Box::new(empty())
-            }
-        }
+    //                     Box::new(empty()) as FutureActionStream
+    //                 }
+    //                 _ => panic!("store error"),
+    //             }
+    //         }).into_stream()
+    //     }
 
-        Robot::build(NullChat, Memory::new())
-            .callback(echo)
-            .finish();
-    }
+    //     Robot::build(NullChat, Memory::new())
+    //         .callback(echo)
+    //         .finish();
+    // }
 }

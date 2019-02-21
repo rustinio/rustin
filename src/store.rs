@@ -3,6 +3,10 @@
 use std::collections::HashMap;
 use std::error::Error as StdError;
 use std::fmt::Display;
+use std::future::Future;
+use std::marker::Unpin;
+
+use futures::future::ok;
 
 use crate::error::Error;
 
@@ -12,11 +16,11 @@ pub trait Store {
     type Error: StdError;
 
     /// Gets the value of the given key, if any.
-    fn get<K>(&self, key: K) -> Result<Option<String>, Self::Error>
+    fn get<K>(&self, key: K) -> Box<dyn Future<Output = Result<Option<String>, Self::Error>> + Unpin>
     where
         K: AsRef<str> + Display;
     /// Sets the given key to the given value.
-    fn set<K, V>(&mut self, key: K, value: V) -> Result<(), Self::Error>
+    fn set<K, V>(&mut self, key: K, value: V) -> Box<dyn Future<Output = Result<(), Self::Error>> + Unpin>
     where
         K: Display + Into<String>,
         V: Into<String>;
@@ -49,20 +53,20 @@ impl Memory {
 impl Store for Memory {
     type Error = Error;
 
-    fn get<K>(&self, key: K) -> Result<Option<String>, Self::Error>
+    fn get<K>(&self, key: K) -> Box<dyn Future<Output = Result<Option<String>, Self::Error>> + Unpin>
     where
         K: AsRef<str> + Display,
     {
-        Ok(self.data.get(key.as_ref()).map(|value| value.clone()))
+        Box::new(ok(self.data.get(key.as_ref()).map(|value| value.clone())))
     }
 
-    fn set<K, V>(&mut self, key: K, value: V) -> Result<(), Self::Error>
+    fn set<K, V>(&mut self, key: K, value: V) -> Box<dyn Future<Output = Result<(), Self::Error>> + Unpin>
     where
         K: Display + Into<String>,
         V: Into<String>,
     {
         self.data.insert(key.into(), value.into());
-        Ok(())
+        Box::new(ok(()))
     }
 
     fn scoped<P>(&mut self, prefix: P) -> ScopedStore<'_, Memory>
@@ -92,7 +96,7 @@ where
 {
     type Error = S::Error;
 
-    fn get<K>(&self, key: K) -> Result<Option<String>, Self::Error>
+    fn get<K>(&self, key: K) -> Box<dyn Future<Output = Result<Option<String>, Self::Error>> + Unpin>
     where
         K: AsRef<str> + Display,
     {
@@ -101,7 +105,7 @@ where
         self.parent.get(key)
     }
 
-    fn set<K, V>(&mut self, key: K, value: V) -> Result<(), Self::Error>
+    fn set<K, V>(&mut self, key: K, value: V) -> Box<dyn Future<Output = Result<(), Self::Error>> + Unpin>
     where
         K: Display + Into<String>,
         V: Into<String>,

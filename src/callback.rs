@@ -2,7 +2,7 @@
 
 use std::marker::Unpin;
 
-use futures::Stream;
+use futures::{Future, Stream};
 
 use crate::error::Error;
 use crate::message::{IncomingMessage, OutgoingMessage};
@@ -11,24 +11,24 @@ use crate::store::Store;
 /// A callback that receives incoming messages and reacts to them however it wishes.
 pub trait Callback<S, K> {
     /// Invokes the callback with the incoming message that triggered it.
-    fn call(&self, message: &IncomingMessage, store: &mut S) -> ActionStream;
+    fn call(&self, message: &IncomingMessage, store: &mut S) -> FutureActionStream;
 }
 
 impl<F, S> Callback<S, (IncomingMessage,)> for F
 where
-    F: Fn(&IncomingMessage) -> ActionStream,
+    F: Fn(&IncomingMessage) -> FutureActionStream,
 {
-    fn call(&self, message: &IncomingMessage, _store: &mut S) -> ActionStream {
+    fn call(&self, message: &IncomingMessage, _store: &mut S) -> FutureActionStream {
         self(message)
     }
 }
 
 impl<F, S> Callback<S, (IncomingMessage, S)> for F
 where
-    F: Fn(&IncomingMessage, &mut S) -> ActionStream,
+    F: Fn(&IncomingMessage, &mut S) -> FutureActionStream,
     S: Store,
 {
-    fn call(&self, message: &IncomingMessage, store: &mut S) -> ActionStream {
+    fn call(&self, message: &IncomingMessage, store: &mut S) -> FutureActionStream {
         self(message, store)
     }
 }
@@ -40,5 +40,8 @@ pub enum Action {
     SendMessage(OutgoingMessage),
 }
 
-/// An asynchronous stream of actions. This type is returned by callbacks.
-pub type ActionStream = Box<dyn Stream<Item = Result<Action, Error>> + Unpin>;
+/// An asynchronous stream of actions initiated by a callback.
+pub type ActionStream = Box<dyn Stream<Item = Action> + Unpin>;
+
+/// A future that resolves to an `ActionStream` or an `Error`. This type is returned by callbacks.
+pub type FutureActionStream = Box<dyn Future<Output = Result<ActionStream, Error>> + Unpin>;

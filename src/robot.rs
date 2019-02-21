@@ -64,15 +64,16 @@ where
 
         while let Some(Ok(message)) = await!(StreamExt::next(&mut incoming_messages)) {
             while let Some(callback) = await!(callbacks.next()) {
-                let mut actions = callback.call(&message, &mut self.store);
-
-                while let Some(Ok(action)) = await!(StreamExt::next(&mut actions)) {
-                    match action {
-                        Action::SendMessage(outgoing) => {
-                            await!(self.chat_service.send_message(outgoing))?;
+                if let Ok(mut actions) = await!(callback.call(&message, &mut self.store)) {
+                    while let Some(action) = await!(StreamExt::next(&mut actions)) {
+                        match action {
+                            Action::SendMessage(outgoing) => {
+                                await!(self.chat_service.send_message(outgoing))?;
+                            }
                         }
                     }
                 }
+                // TODO: Handle errors from callbacks.
             }
         }
 
