@@ -19,8 +19,8 @@ pub use crate::{
     error::Error,
     robot::{Builder, Robot},
     room::Room,
-    user::User,
     store::Store,
+    user::User,
 };
 
 #[cfg(test)]
@@ -67,10 +67,10 @@ mod tests {
     #[test]
     fn fn_stateless_callback() {
         fn echo(message: &IncomingMessage) -> FutureActionStream {
-                let body = message.body();
-                let reply = message.reply(body);
+            let body = message.body();
+            let reply = message.reply(body);
 
-                reply.into_future_action_stream()
+            reply.into_future_action_stream()
         }
 
         Robot::build(NullChat, Memory::new())
@@ -126,7 +126,10 @@ mod tests {
 
     #[test]
     fn fn_stateful_callback() {
-        fn echo<S>(message: &IncomingMessage, store: &S) -> FutureActionStream where S: Store {
+        fn echo<S>(message: &IncomingMessage, store: &S) -> FutureActionStream
+        where
+            S: Store,
+        {
             let message = message.clone();
             let id = message.user().id().to_owned();
             let store = store.clone();

@@ -4,7 +4,7 @@ use std::pin::Pin;
 
 use futures::{
     future::{ok, ready},
-    stream::{once, empty},
+    stream::{empty, once},
     Future,
     Stream,
 };
@@ -44,7 +44,6 @@ pub enum Action {
     /// Sends a message to the chat service.
     SendMessage(OutgoingMessage),
 }
-
 
 impl Action {
     /// Convenience method for creating an empty `ActionStream`.
