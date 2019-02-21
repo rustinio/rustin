@@ -1,5 +1,3 @@
-use std::marker::Unpin;
-
 use futures::stream::{iter, StreamExt};
 
 use crate::callback::{Action, Callback};
@@ -45,7 +43,7 @@ pub struct Robot<C, S, K> {
 
 impl<C, S, K> Robot<C, S, K>
 where
-    C: ChatService + Unpin,
+    C: ChatService,
     S: Store,
 {
     /// Begins constructing a `Robot`.

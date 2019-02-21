@@ -1,6 +1,6 @@
 //! Types for connecting Rustin to a chat service.
 
-use std::marker::Unpin;
+use std::pin::Pin;
 
 use futures::{Future, Stream};
 
@@ -34,7 +34,7 @@ pub trait MultiRoomChatService: ChatService {
 }
 
 /// A type indicating a successful operation with the chat service that has no meaningful return value.
-pub type Success = Box<dyn Future<Output = Result<(), Error>> + Unpin>;
+pub type Success = Pin<Box<dyn Future<Output = Result<(), Error>>>>;
 
 /// An asynchronous stream of incoming messages.
-pub type Incoming = Box<dyn Stream<Item = Result<IncomingMessage, Error>> + Unpin>;
+pub type Incoming = Pin<Box<dyn Stream<Item = Result<IncomingMessage, Error>>>>;

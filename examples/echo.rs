@@ -10,9 +10,9 @@ fn echo(message: &IncomingMessage) -> FutureActionStream {
     let body = message.body();
     let reply = message.reply(body);
     let future_reply = ready(reply);
-    let stream = Box::new(once(future_reply)) as ActionStream;
+    let stream = Box::pin(once(future_reply)) as ActionStream;
 
-    Box::new(ok(stream))
+    Box::pin(ok(stream))
 }
 
 fn main() {

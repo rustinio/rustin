@@ -17,7 +17,7 @@ impl ChatService for Shell {
     fn send_message(&self, message: OutgoingMessage) -> Success {
         println!("{}", message);
 
-        Box::new(ok(()))
+        Box::pin(ok(()))
     }
 
     fn incoming(&self) -> Incoming {
@@ -73,6 +73,6 @@ impl ChatService for Shell {
             }
         });
 
-        Box::new(rx)
+        Box::pin(rx)
     }
 }

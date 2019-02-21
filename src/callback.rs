@@ -1,6 +1,6 @@
 //! Types for extending Rustin's behavior.
 
-use std::marker::Unpin;
+use std::pin::Pin;
 
 use futures::{Future, Stream};
 
@@ -41,7 +41,7 @@ pub enum Action {
 }
 
 /// An asynchronous stream of actions initiated by a callback.
-pub type ActionStream = Box<dyn Stream<Item = Action> + Unpin>;
+pub type ActionStream = Pin<Box<dyn Stream<Item = Action>>>;
 
 /// A future that resolves to an `ActionStream` or an `Error`. This type is returned by callbacks.
-pub type FutureActionStream = Box<dyn Future<Output = Result<ActionStream, Error>> + Unpin>;
+pub type FutureActionStream = Pin<Box<dyn Future<Output = Result<ActionStream, Error>>>>;
