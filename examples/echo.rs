@@ -12,7 +12,9 @@ fn echo(message: &IncomingMessage) -> FutureActionStream {
 }
 
 fn main() {
-    let robot = Robot::build(Shell, Memory::new()).callback(echo).finish();
+    let chat_service = Shell::default();
+    let store = Memory::new();
+    let robot = Robot::build(chat_service, store).callback(echo).finish();
 
     if let Err(error) = block_on(robot.run()) {
         println!("ERROR: {}", error);
