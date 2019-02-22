@@ -1,4 +1,4 @@
-use futures::stream::{iter, StreamExt};
+use futures::stream::{StreamExt};
 
 use crate::callback::{Action, Callback};
 use crate::chat_service::ChatService;
@@ -58,10 +58,9 @@ where
     /// Starts the robot, connecting to the chat service and listening for incoming messages.
     pub async fn run(self) -> Result<(), Error> {
         let mut incoming_messages = self.chat_service.incoming();
-        let mut callbacks = iter(self.callbacks.into_iter());
 
         while let Some(Ok(message)) = await!(StreamExt::next(&mut incoming_messages)) {
-            while let Some(callback) = await!(callbacks.next()) {
+            for callback in &self.callbacks {
                 if let Ok(mut actions) = await!(callback.call(&message, &self.store)) {
                     while let Some(action) = await!(StreamExt::next(&mut actions)) {
                         match action {
