@@ -1,4 +1,4 @@
-use futures::stream::{StreamExt};
+use futures::stream::StreamExt;
 
 use crate::callback::{Action, Callback};
 use crate::chat_service::ChatService;

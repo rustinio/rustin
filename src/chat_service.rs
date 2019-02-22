@@ -7,6 +7,7 @@ use futures::{Future, Stream};
 use crate::error::Error;
 use crate::message::{IncomingMessage, OutgoingMessage};
 use crate::room::Room;
+use crate::user::User;
 
 pub use self::shell::Shell;
 
@@ -22,6 +23,12 @@ pub trait ChatService {
 
     /// Connects to the chat service and listens for incoming messages.
     fn incoming(&self) -> Incoming;
+
+    /// Returns a `User` representing the robot.
+    ///
+    /// May be absent if not applicable or if called before the robot has connected to the chat
+    /// service and retrieved data about itself.
+    fn user(&self) -> Option<&User>;
 }
 
 /// A `ChatService` that supports joining and parting from multiple rooms.

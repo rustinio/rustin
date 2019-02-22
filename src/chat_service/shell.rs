@@ -12,14 +12,17 @@ use crate::user::User;
 /// An adapter that runs in your shell.
 #[derive(Clone, Debug)]
 pub struct Shell {
-    name: String,
+    user: User,
 }
 
 impl Shell {
     /// Creates a new `Shell` with the given name for the robot.
-    pub fn new<N>(name: N) -> Self where N: Into<String> {
+    pub fn new<N>(name: N) -> Self
+    where
+        N: Into<String>,
+    {
         Shell {
-            name: name.into(),
+            user: User::new("1", Some(name)),
         }
     }
 }
@@ -27,7 +30,7 @@ impl Shell {
 impl Default for Shell {
     fn default() -> Self {
         Shell {
-            name: "Rustin".to_owned(),
+            user: User::new("1", Some("Rustin")),
         }
     }
 }
@@ -41,7 +44,8 @@ impl ChatService for Shell {
 
     fn incoming(&self) -> Incoming {
         let (mut tx, rx) = channel(0);
-        let prompt = format!("{} > ", self.name);
+        let robot = self.user().expect("accessing robot user");
+        let prompt = format!("{} > ", robot.name().expect("accessing user name"));
 
         thread::spawn(move || {
             let input = io::stdin();
@@ -93,5 +97,9 @@ impl ChatService for Shell {
         });
 
         Box::pin(rx)
+    }
+
+    fn user(&self) -> Option<&User> {
+        Some(&self.user)
     }
 }

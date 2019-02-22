@@ -31,6 +31,7 @@ mod tests {
     use super::chat_service::{ChatService, Incoming, Success};
     use super::message::{IncomingMessage, OutgoingMessage};
     use super::store::{Memory, Store};
+    use super::user::User;
     use super::{Action, Callback, FutureActionStream, Robot};
 
     #[derive(Clone, Debug)]
@@ -43,6 +44,10 @@ mod tests {
 
         fn incoming(&self) -> Incoming {
             Box::pin(empty())
+        }
+
+        fn user(&self) -> Option<&User> {
+            None
         }
     }
 
