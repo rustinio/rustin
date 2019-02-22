@@ -104,6 +104,16 @@ where
     prefix: String,
 }
 
+impl<S> ScopedStore<S> where S: Store {
+    /// Creates a new `ScopedStore`.
+    pub fn new<P>(store: S, prefix: P) -> Self where P: Into<String> {
+        ScopedStore {
+            parent: store,
+            prefix: prefix.into(),
+        }
+    }
+}
+
 impl<S> Store for ScopedStore<S>
 where
     S: Store,
