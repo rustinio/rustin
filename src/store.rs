@@ -14,7 +14,7 @@ use crate::error::Error;
 /// Persistent data storage for the robot.
 pub trait Store: Clone + Send + Sync + 'static {
     /// An error encountered when interacting with the underlying data store.
-    type Error: Clone + StdError + Send + Sync + 'static;
+    type Error: StdError + Send + Sync + 'static;
 
     /// Gets the value of the given key, if any.
     fn get<K>(&self, key: K) -> Pin<Box<dyn Future<Output = Result<Option<String>, Self::Error>>>>
