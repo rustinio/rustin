@@ -52,15 +52,15 @@ impl Action {
     }
 }
 
-impl Into<ActionStream> for Action {
-    fn into(self) -> ActionStream {
-        Box::pin(once(ready(self)))
+impl From<Action> for ActionStream {
+    fn from(action: Action) -> Self {
+        Box::pin(once(ready(action)))
     }
 }
 
-impl Into<FutureActionStream> for Action {
-    fn into(self) -> FutureActionStream {
-        Box::pin(ok(self.into()))
+impl From<Action> for FutureActionStream {
+    fn from(action: Action) -> Self {
+        Box::pin(ok(action.into()))
     }
 }
 
