@@ -17,7 +17,11 @@ pub use crate::{
     callback::{Action, ActionStream, Callback, FutureActionStream},
     config::Config,
     error::Error,
-    robot::{Builder, Robot},
+    robot::{
+        Builder,
+        Robot,
+        handle::Handle,
+    },
     room::Room,
     store::Store,
     user::User,

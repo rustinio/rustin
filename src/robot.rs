@@ -5,6 +5,8 @@ use crate::chat_service::ChatService;
 use crate::error::Error;
 use crate::store::Store;
 
+pub mod handle;
+
 /// A builder for configuring a new `Robot`.
 pub struct Builder<C, S, K> {
     callbacks: Vec<Box<dyn Callback<S, K>>>,
