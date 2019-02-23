@@ -75,7 +75,7 @@ where
             for callback in &self.callbacks {
                 let handle = Handle::new(
                     message.clone(),
-                    ScopedStore::new(self.store.clone(), callback.prefix()),
+                    ScopedStore::new(self.store.clone(), "TODO"),
                 );
 
                 if let Ok(mut actions) = await!(callback.call(handle)) {

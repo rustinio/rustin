@@ -10,6 +10,7 @@ mod error;
 pub mod message;
 mod robot;
 mod room;
+mod route;
 pub mod store;
 mod user;
 

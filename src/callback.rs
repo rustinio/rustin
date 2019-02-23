@@ -20,9 +20,6 @@ use crate::{
 pub trait Callback<S> {
     /// Invokes the callback with the incoming message that triggered it.
     fn call(&self, handle: Handle<S>) -> FutureActionStream where S: Store;
-
-    /// Returns the prefix that should be used for namespacing any data stored by the callback.
-    fn prefix(&self) -> &'static str;
 }
 
 impl<F, S> Callback<S> for F
@@ -32,10 +29,6 @@ where
 {
     fn call(&self, handle: Handle<S>) -> FutureActionStream {
         self(handle)
-    }
-
-    fn prefix(&self) -> &'static str {
-        "anonymous"
     }
 }
 
