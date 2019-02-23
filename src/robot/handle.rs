@@ -11,8 +11,13 @@ use crate::store::{ScopedStore, Store};
 use crate::user::User;
 
 /// The API for callbacks to interface with the incoming message and data stores.
-pub struct Handle<S> {
+pub struct Handle<S>
+where
+    S: Store
+{
     message: IncomingMessage,
+    namespace: &'static str,
+    scoped_store: ScopedStore<S>,
     store: S,
 }
 
@@ -21,9 +26,11 @@ where
     S: Store,
 {
     /// Creates a new `Handle`.
-    pub fn new(message: IncomingMessage, store: S) -> Self {
+    pub fn new(message: IncomingMessage, namespace: &'static str, store: S) -> Self {
         Handle {
             message,
+            namespace,
+            scoped_store: ScopedStore::new(store.clone(), namespace),
             store,
         }
     }
@@ -78,7 +85,7 @@ where
     where
         K: AsRef<str> + Display,
     {
-        self.store.get(key)
+        self.scoped_store.get(key)
     }
 
     /// Sets the given key to the given value in the robot's core data store.
@@ -93,6 +100,6 @@ where
         K: Display + Into<String>,
         V: Into<String>,
     {
-        self.store.set(key, value)
+        self.scoped_store.set(key, value)
     }
 }

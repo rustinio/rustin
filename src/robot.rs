@@ -1,9 +1,12 @@
 use futures::stream::StreamExt;
 
-use crate::callback::{Action, Callback};
-use crate::chat_service::ChatService;
-use crate::error::Error;
-use crate::store::{ScopedStore, Store};
+use crate::{
+    callback::{Action, Callback},
+    chat_service::ChatService,
+    error::Error,
+    route::Route,
+    store::Store,
+};
 use self::handle::Handle;
 
 pub mod handle;
@@ -13,8 +16,8 @@ pub struct Builder<C, S>
 where
     S: Store
 {
-    callbacks: Vec<Box<dyn Callback<ScopedStore<S>>>>,
     chat_service: C,
+    routes: Vec<Route<S>>,
     store: S,
 }
 
@@ -22,22 +25,20 @@ impl<C, S> Builder<C, S>
 where
     S: Store
 {
-    /// Adds a callback.
-    pub fn callback<T>(mut self, callback: T) -> Self
-    where
-        T: Callback<ScopedStore<S>> + 'static,
-        S: Store,
-    {
-        self.callbacks.push(Box::new(callback));
 
+    /// Adds a route.
+    pub fn route(mut self, route: Route<S>) -> Self
+    where
+    {
+        self.routes.push(route);
         self
     }
 
     /// Creates a `Robot` from the builder.
     pub fn finish(self) -> Robot<C, S> {
         Robot {
-            callbacks: self.callbacks,
             chat_service: self.chat_service,
+            routes: self.routes,
             store: self.store,
         }
     }
@@ -48,8 +49,8 @@ pub struct Robot<C, S>
 where
     S: Store
 {
-    callbacks: Vec<Box<dyn Callback<ScopedStore<S>>>>,
     chat_service: C,
+    routes: Vec<Route<S>>,
     store: S,
 }
 
@@ -61,8 +62,8 @@ where
     /// Begins constructing a `Robot`.
     pub fn build(chat_service: C, store: S) -> Builder<C, S> {
         Builder {
-            callbacks: Vec::new(),
             chat_service,
+            routes: Vec::new(),
             store,
         }
     }
@@ -72,13 +73,14 @@ where
         let mut incoming_messages = self.chat_service.incoming();
 
         while let Some(Ok(message)) = await!(StreamExt::next(&mut incoming_messages)) {
-            for callback in &self.callbacks {
+            for route in &self.routes {
                 let handle = Handle::new(
                     message.clone(),
-                    ScopedStore::new(self.store.clone(), "TODO"),
+                    route.namespace(),
+                    self.store.clone(),
                 );
 
-                if let Ok(mut actions) = await!(callback.call(handle)) {
+                if let Ok(mut actions) = await!(route.call(handle)) {
                     while let Some(action) = await!(StreamExt::next(&mut actions)) {
                         match action {
                             Action::SendMessage(outgoing) => {
