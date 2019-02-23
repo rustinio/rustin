@@ -4,7 +4,6 @@ use std::fmt::Display;
 use std::future::Future;
 use std::pin::Pin;
 
-use super::Robot;
 use crate::callback::Action;
 use crate::message::IncomingMessage;
 use crate::room::Room;
@@ -12,19 +11,23 @@ use crate::store::{ScopedStore, Store};
 use crate::user::User;
 
 /// The API for callbacks to interface with the incoming message and data stores.
-pub struct Handle<'a, C, S, K>
-where
-    S: Store,
-{
-    message: &'a IncomingMessage,
-    store: ScopedStore<S>,
-    robot: &'a Robot<C, S, K>,
+pub struct Handle<S> {
+    message: IncomingMessage,
+    store: S,
 }
 
-impl<'a, C, S, K> Handle<'a, C, S, K>
+impl<S> Handle<S>
 where
     S: Store,
 {
+    /// Creates a new `Handle`.
+    pub fn new(message: IncomingMessage, store: S) -> Self {
+        Handle {
+            message,
+            store,
+        }
+    }
+
     /// The body of the incoming message.
     pub fn message_body(&self) -> &str {
         self.message.body()
@@ -68,12 +71,12 @@ where
     /// Gets the value of the given key, if any, from the robot's core data store.
     ///
     /// The key will be scoped to the callback's namespace.
-    pub fn get<Key>(
+    pub fn get<K>(
         &self,
-        key: Key,
+        key: K,
     ) -> Pin<Box<dyn Future<Output = Result<Option<String>, <ScopedStore<S> as Store>::Error>>>>
     where
-        Key: AsRef<str> + Display,
+        K: AsRef<str> + Display,
     {
         self.store.get(key)
     }
@@ -81,13 +84,13 @@ where
     /// Sets the given key to the given value in the robot's core data store.
     ///
     /// The key will be scoped to the callback's namespace.
-    pub fn set<Key, V>(
+    pub fn set<K, V>(
         &self,
-        key: Key,
+        key: K,
         value: V,
     ) -> Pin<Box<dyn Future<Output = Result<(), <ScopedStore<S> as Store>::Error>>>>
     where
-        Key: Display + Into<String>,
+        K: Display + Into<String>,
         V: Into<String>,
     {
         self.store.set(key, value)

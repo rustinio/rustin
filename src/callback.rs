@@ -9,32 +9,33 @@ use futures::{
     Stream,
 };
 
-use crate::error::Error;
-use crate::message::{IncomingMessage, OutgoingMessage};
-use crate::store::Store;
+use crate::{
+    error::Error,
+    message::OutgoingMessage,
+    robot::handle::Handle,
+    store::Store,
+};
 
 /// A callback that receives incoming messages and reacts to them however it wishes.
-pub trait Callback<S, K> {
+pub trait Callback<S> {
     /// Invokes the callback with the incoming message that triggered it.
-    fn call(&self, message: &IncomingMessage, store: &S) -> FutureActionStream;
+    fn call(&self, handle: Handle<S>) -> FutureActionStream where S: Store;
+
+    /// Returns the prefix that should be used for namespacing any data stored by the callback.
+    fn prefix(&self) -> &'static str;
 }
 
-impl<F, S> Callback<S, (IncomingMessage,)> for F
+impl<F, S> Callback<S> for F
 where
-    F: Fn(&IncomingMessage) -> FutureActionStream,
-{
-    fn call(&self, message: &IncomingMessage, _store: &S) -> FutureActionStream {
-        self(message)
-    }
-}
-
-impl<F, S> Callback<S, (IncomingMessage, S)> for F
-where
-    F: Fn(&IncomingMessage, &S) -> FutureActionStream,
+    F: Fn(Handle<S>) -> FutureActionStream,
     S: Store,
 {
-    fn call(&self, message: &IncomingMessage, store: &S) -> FutureActionStream {
-        self(message, store)
+    fn call(&self, handle: Handle<S>) -> FutureActionStream {
+        self(handle)
+    }
+
+    fn prefix(&self) -> &'static str {
+        "anonymous"
     }
 }
 
