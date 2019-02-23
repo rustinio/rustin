@@ -1,4 +1,4 @@
-/// Routes match incoming messages to callbacks.
+//! Routes match incoming messages to callbacks.
 
 use regex::Regex;
 
@@ -8,6 +8,8 @@ use crate::{
     store::Store,
 };
 
+/// A route is a regular expression to match against incoming messages and a callback to call when
+/// a match is found.
 pub struct Route<S> {
     callback: Box<dyn Callback<S>>,
     namespace: &'static str,
@@ -15,6 +17,7 @@ pub struct Route<S> {
 }
 
 impl<S> Route<S> {
+    /// Constructs a new `Route`.
     pub fn new<C>(pattern: Regex, namespace: &'static str, callback: C) -> Self
     where
         C: Callback<S> + 'static
@@ -26,10 +29,12 @@ impl<S> Route<S> {
         }
     }
 
+    /// The route's regular expression.
     pub fn pattern(&self) -> &Regex {
         &self.pattern
     }
 
+    /// The namespace to use for any data persisted within the callback.
     pub fn namespace(&self) -> &'static str {
         self.namespace
     }

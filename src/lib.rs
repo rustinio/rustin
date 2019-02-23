@@ -24,20 +24,32 @@ pub use crate::{
         handle::Handle,
     },
     room::Room,
+    route::Route,
     store::Store,
     user::User,
 };
 
 #[cfg(test)]
 mod tests {
-    use futures::future::ok;
-    use futures::stream::empty;
+    use regex::Regex;
 
-    use super::chat_service::{ChatService, Incoming, Success};
-    use super::message::{IncomingMessage, OutgoingMessage};
-    use super::store::{Memory, Store};
-    use super::user::User;
-    use super::{Action, Callback, FutureActionStream, Robot};
+    use futures::{
+        future::ok,
+        stream::empty,
+    };
+
+    use super::{
+        chat_service::{ChatService, Incoming, Success},
+        message::{IncomingMessage, OutgoingMessage},
+        robot::handle::Handle,
+        store::{Memory, Store},
+        user::User,
+        Action,
+        Callback,
+        FutureActionStream,
+        Robot,
+        Route,
+    };
 
     #[derive(Clone, Debug)]
     struct NullChat;
@@ -60,31 +72,37 @@ mod tests {
     fn manual_stateless_callback() {
         struct Echo;
 
-        impl<S> Callback<S, (IncomingMessage,)> for Echo {
-            fn call(&self, message: &IncomingMessage, _store: &S) -> FutureActionStream {
-                let body = message.body();
-                let reply = message.reply(body);
+        impl<S> Callback<S> for Echo
+        where
+            S: Store
+        {
+            fn call(&self, handle: Handle<S>) -> FutureActionStream {
+                let body = handle.message_body();
+                let reply = handle.reply(body);
 
                 reply.into()
             }
         }
 
         Robot::build(NullChat, Memory::new())
-            .callback(Echo)
+            .route(Route::new(Regex::new(r".*").unwrap(), "echo", Echo))
             .finish();
     }
 
     #[test]
     fn fn_stateless_callback() {
-        fn echo(message: &IncomingMessage) -> FutureActionStream {
-            let body = message.body();
-            let reply = message.reply(body);
+        fn echo<S>(handle: Handle<S>) -> FutureActionStream
+        where
+            S: Store
+        {
+            let body = handle.message_body();
+            let reply = handle.reply(body);
 
             reply.into()
         }
 
         Robot::build(NullChat, Memory::new())
-            .callback(echo)
+            .route(Route::new(Regex::new(r".*").unwrap(), "echo", echo))
             .finish();
     }
 
@@ -92,28 +110,26 @@ mod tests {
     fn manual_stateful_callback() {
         struct WelcomeBack;
 
-        impl<S> Callback<S, (IncomingMessage, S)> for WelcomeBack
+        impl<S> Callback<S> for WelcomeBack
         where
             S: Store,
         {
-            fn call(&self, message: &IncomingMessage, store: &S) -> FutureActionStream {
-                let message = message.clone();
-                let id = message.user().id().to_owned();
-                let store = store.clone();
+            fn call(&self, handle: Handle<S>) -> FutureActionStream {
+                let id = handle.user().id().to_owned();
 
                 let future = async move {
-                    match await!(store.get(&id)) {
+                    match await!(handle.get(&id)) {
                         Ok(Some(id)) => {
-                            let reply = message.reply(format!(
+                            let reply = handle.reply(format!(
                                 "Hello again, {}!",
-                                message.user().name().unwrap_or(&id)
+                                handle.user().name().unwrap_or(&id)
                             ));
                             let stream = reply.into();
 
                             Ok(stream)
                         }
                         Ok(None) => {
-                            if let Err(_) = await!(store.set(id, "1")) {
+                            if let Err(_) = await!(handle.set(id, "1")) {
                                 panic!("store error");
                             }
 
@@ -130,33 +146,31 @@ mod tests {
         }
 
         Robot::build(NullChat, Memory::new())
-            .callback(WelcomeBack)
+            .route(Route::new(Regex::new(r".*").unwrap(), "welcome.back", WelcomeBack))
             .finish();
     }
 
     #[test]
     fn fn_stateful_callback() {
-        fn echo<S>(message: &IncomingMessage, store: &S) -> FutureActionStream
+        fn welcome_back<S>(handle: Handle<S>) -> FutureActionStream
         where
             S: Store,
         {
-            let message = message.clone();
-            let id = message.user().id().to_owned();
-            let store = store.clone();
+            let id = handle.user().id().to_owned();
 
             let future = async move {
-                match await!(store.get(&id)) {
+                match await!(handle.get(&id)) {
                     Ok(Some(id)) => {
-                        let reply = message.reply(format!(
+                        let reply = handle.reply(format!(
                             "Hello again, {}!",
-                            message.user().name().unwrap_or(&id)
+                            handle.user().name().unwrap_or(&id)
                         ));
                         let stream = reply.into();
 
                         Ok(stream)
                     }
                     Ok(None) => {
-                        if let Err(_) = await!(store.set(id, "1")) {
+                        if let Err(_) = await!(handle.set(id, "1")) {
                             panic!("store error");
                         }
 
@@ -172,7 +186,7 @@ mod tests {
         }
 
         Robot::build(NullChat, Memory::new())
-            .callback(echo)
+            .route(Route::new(Regex::new(r".*").unwrap(), "welcome.back", welcome_back))
             .finish();
     }
 }
