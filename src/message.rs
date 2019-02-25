@@ -2,7 +2,6 @@
 
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
-use crate::callback::Action;
 use crate::room::Room;
 use crate::user::User;
 
@@ -17,7 +16,7 @@ impl IncomingMessage {
     /// Creates a new `IncomingMessage`.
     pub fn new(source: Source, body: String) -> Self {
         IncomingMessage {
-            body: body,
+            body,
             source: source,
         }
     }
@@ -27,49 +26,46 @@ impl IncomingMessage {
         &self.body
     }
 
-    /// Creates an outgoing message action targeting the source of the incoming message.
-    pub fn reply<S>(&self, body: S) -> Action
+    /// Creates an `OutgoingMessage` targeting the source of the incoming message.
+    pub fn reply<B>(&self, body: B) -> OutgoingMessage
     where
-        S: Into<String>,
+        B: Into<String>,
     {
-        Action::SendMessage(OutgoingMessage {
-            body: body.into(),
-            target: match self.source {
-                Source::User(ref user) => Target::User(user.clone()),
-                Source::UserInRoom(_, ref room) => Target::Room(room.clone()),
-            },
-        })
+        let target = match self.source {
+            Source::User(ref user) => Target::User(user.clone()),
+            Source::UserInRoom(_, ref room) => Target::Room(room.clone()),
+        };
+
+        OutgoingMessage::new(target, body)
     }
 
-    /// Creates an outgoing message action directly targeting the source of the incoming message.
-    pub fn reply_privately<S>(&self, body: S) -> Action
+    /// Creates an `OutgoingMessage` directly targeting the source of the incoming message.
+    pub fn reply_privately<B>(&self, body: B) -> OutgoingMessage
     where
-        S: Into<String>,
+        B: Into<String>,
     {
-        Action::SendMessage(OutgoingMessage {
-            body: body.into(),
-            target: match self.source {
-                Source::User(ref user) => Target::User(user.clone()),
-                Source::UserInRoom(ref user, _) => Target::User(user.clone()),
-            },
-        })
+        let target = match self.source {
+            Source::User(ref user) => Target::User(user.clone()),
+            Source::UserInRoom(ref user, _) => Target::User(user.clone()),
+        };
+
+        OutgoingMessage::new(target, body)
     }
 
-    /// Creates an outgoing message action targeting the source of the incoming message and, if the
+    /// Creates an `OutgoingMessage` targeting the source of the incoming message and, if the
     /// incoming message came from a room, prefixing the reply with the user's name.
-    pub fn reply_with_mention<S>(&self, body: S) -> Action
+    pub fn reply_with_mention<B>(&self, body: B) -> OutgoingMessage
     where
-        S: Into<String>,
+        B: Into<String>,
     {
-        Action::SendMessage(OutgoingMessage {
-            body: body.into(),
-            target: match self.source {
-                Source::User(ref user) => Target::User(user.clone()),
-                Source::UserInRoom(ref user, ref room) => {
-                    Target::UserInRoom(user.clone(), room.clone())
-                }
-            },
-        })
+        let target = match self.source {
+            Source::User(ref user) => Target::User(user.clone()),
+            Source::UserInRoom(ref user, ref room) => {
+                Target::UserInRoom(user.clone(), room.clone())
+            }
+        };
+
+        OutgoingMessage::new(target, body)
     }
 
     /// The room the message was sent from, if any.
@@ -92,9 +88,12 @@ pub struct OutgoingMessage {
 
 impl OutgoingMessage {
     /// Creates a new `OutgoingMessage`.
-    pub fn new(target: Target, body: String) -> Self {
+    pub fn new<B>(target: Target, body: B) -> Self
+    where
+        B: Into<String>,
+    {
         OutgoingMessage {
-            body: body,
+            body: body.into(),
             target: target,
         }
     }

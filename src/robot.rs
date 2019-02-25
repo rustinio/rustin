@@ -1,35 +1,33 @@
+use std::sync::Arc;
+
 use futures::stream::StreamExt;
 
 use crate::{
-    callback::{Action, Callback},
+    callback::Callback,
     chat_service::ChatService,
     error::Error,
     route::Route,
     store::Store,
 };
-use self::handle::Handle;
-
-pub mod handle;
-
 /// A builder for configuring a new `Robot`.
 pub struct Builder<C, S>
 where
-    S: Store
+    C: ChatService,
+    S: Store,
 {
     chat_service: C,
-    routes: Vec<Route<S>>,
+    routes: Vec<Route<C, S>>,
     store: S,
 }
 
 impl<C, S> Builder<C, S>
 where
-    S: Store
+    C: ChatService,
+    S: Store,
 {
-
     /// Adds a route.
-    pub fn route(mut self, route: Route<S>) -> Self
-    where
-    {
+    pub fn route(mut self, route: Route<C, S>) -> Self
+where {
         self.routes.push(route);
         self
     }
@@ -37,7 +35,7 @@ where
     /// Creates a `Robot` from the builder.
     pub fn finish(self) -> Robot<C, S> {
         Robot {
-            chat_service: self.chat_service,
+            chat_service: Arc::new(self.chat_service),
             routes: self.routes,
             store: self.store,
         }
@@ -47,10 +45,11 @@ where
 /// The primary driver of a program using Rustin.
 pub struct Robot<C, S>
 where
-    S: Store
+    C: ChatService,
+    S: Store,
 {
-    chat_service: C,
-    routes: Vec<Route<S>>,
+    chat_service: Arc<C>,
+    routes: Vec<Route<C, S>>,
     store: S,
 }
 
@@ -74,22 +73,7 @@ where
 
         while let Some(Ok(message)) = await!(StreamExt::next(&mut incoming_messages)) {
             for route in &self.routes {
-                let handle = Handle::new(
-                    message.clone(),
-                    route.namespace(),
-                    self.store.clone(),
-                );
-
-                if let Ok(mut actions) = await!(route.call(handle)) {
-                    while let Some(action) = await!(StreamExt::next(&mut actions)) {
-                        match action {
-                            Action::SendMessage(outgoing) => {
-                                await!(self.chat_service.send_message(outgoing))?;
-                            }
-                        }
-                    }
-                }
-                // TODO: Handle errors from callbacks.
+                await!(route.call(self.chat_service.clone(), &message, self.store.clone()))?
             }
         }
 

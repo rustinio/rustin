@@ -1,26 +1,35 @@
 //! Routes match incoming messages to callbacks.
 
+use std::sync::Arc;
+
 use regex::Regex;
 
 use crate::{
-    callback::{Callback, FutureActionStream},
-    robot::handle::Handle,
+    callback::{Callback, CallbackFuture},
+    chat_service::ChatService,
+    message::IncomingMessage,
     store::Store,
 };
 
 /// A route is a regular expression to match against incoming messages and a callback to call when
 /// a match is found.
-pub struct Route<S> {
-    callback: Box<dyn Callback<S>>,
+pub struct Route<C, S>
+where
+    C: ChatService,
+{
+    callback: Box<dyn Callback<C, S>>,
     namespace: &'static str,
     pattern: Regex,
 }
 
-impl<S> Route<S> {
+impl<C, S> Route<C, S>
+where
+    C: ChatService,
+{
     /// Constructs a new `Route`.
-    pub fn new<C>(pattern: Regex, namespace: &'static str, callback: C) -> Self
+    pub fn new<Cbk>(pattern: Regex, namespace: &'static str, callback: Cbk) -> Self
     where
-        C: Callback<S> + 'static
+        Cbk: Callback<C, S> + 'static,
     {
         Route {
             callback: Box::new(callback),
@@ -40,11 +49,12 @@ impl<S> Route<S> {
     }
 }
 
-impl<S> Callback<S> for Route<S>
+impl<C, S> Callback<C, S> for Route<C, S>
 where
-    S: Store
+    C: ChatService,
+    S: Store,
 {
-    fn call(&self, handle: Handle<S>) -> FutureActionStream {
-        self.callback.call(handle)
+    fn call(&self, chat: Arc<C>, message: &IncomingMessage, store: S) -> CallbackFuture {
+        self.callback.call(chat, message, store)
     }
 }

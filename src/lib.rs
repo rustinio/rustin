@@ -15,14 +15,10 @@ pub mod store;
 mod user;
 
 pub use crate::{
-    callback::{Action, ActionStream, Callback, FutureActionStream},
+    callback::{Callback, CallbackFuture},
     config::Config,
     error::Error,
-    robot::{
-        Builder,
-        Robot,
-        handle::Handle,
-    },
+    robot::{Builder, Robot},
     room::Room,
     route::Route,
     store::Store,
@@ -31,24 +27,21 @@ pub use crate::{
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
     use regex::Regex;
 
-    use futures::{
-        future::ok,
-        stream::empty,
-    };
+    use futures::{future::ok, stream::empty};
 
     use super::{
+        callback::{Callback, CallbackFuture},
         chat_service::{ChatService, Incoming, Success},
+        error::Error,
         message::{IncomingMessage, OutgoingMessage},
-        robot::handle::Handle,
+        robot::Robot,
+        route::Route,
         store::{Memory, Store},
         user::User,
-        Action,
-        Callback,
-        FutureActionStream,
-        Robot,
-        Route,
     };
 
     #[derive(Clone, Debug)]
@@ -69,75 +62,33 @@ mod tests {
     }
 
     #[test]
-    fn manual_stateless_callback() {
-        struct Echo;
-
-        impl<S> Callback<S> for Echo
-        where
-            S: Store
-        {
-            fn call(&self, handle: Handle<S>) -> FutureActionStream {
-                let body = handle.message_body();
-                let reply = handle.reply(body);
-
-                reply.into()
-            }
-        }
-
-        Robot::build(NullChat, Memory::new())
-            .route(Route::new(Regex::new(r".*").unwrap(), "echo", Echo))
-            .finish();
-    }
-
-    #[test]
-    fn fn_stateless_callback() {
-        fn echo<S>(handle: Handle<S>) -> FutureActionStream
-        where
-            S: Store
-        {
-            let body = handle.message_body();
-            let reply = handle.reply(body);
-
-            reply.into()
-        }
-
-        Robot::build(NullChat, Memory::new())
-            .route(Route::new(Regex::new(r".*").unwrap(), "echo", echo))
-            .finish();
-    }
-
-    #[test]
-    fn manual_stateful_callback() {
+    fn manual_callback() {
         struct WelcomeBack;
 
-        impl<S> Callback<S> for WelcomeBack
+        impl<C, S> Callback<C, S> for WelcomeBack
         where
+            C: ChatService + 'static,
             S: Store,
         {
-            fn call(&self, handle: Handle<S>) -> FutureActionStream {
-                let id = handle.user().id().to_owned();
+            fn call(&self, chat: Arc<C>, message: &IncomingMessage, store: S) -> CallbackFuture {
+                let message = message.clone();
+                let id = message.user().id().to_owned();
 
                 let future = async move {
-                    match await!(handle.get(&id)) {
+                    match await!(store.get(&id)) {
                         Ok(Some(id)) => {
-                            let reply = handle.reply(format!(
+                            chat.send_message(message.reply(format!(
                                 "Hello again, {}!",
-                                handle.user().name().unwrap_or(&id)
-                            ));
-                            let stream = reply.into();
+                                message.user().name().unwrap_or(&id)
+                            )));
 
-                            Ok(stream)
+                            Ok(())
                         }
-                        Ok(None) => {
-                            if let Err(_) = await!(handle.set(id, "1")) {
-                                panic!("store error");
-                            }
-
-                            let stream = Action::empty_stream();
-
-                            Ok(stream)
-                        }
-                        Err(_) => panic!("store error"),
+                        Ok(None) => match await!(store.set(id, "1")) {
+                            Ok(_) => Ok(()),
+                            Err(_) => Err(Error),
+                        },
+                        Err(_) => Err(Error),
                     }
                 };
 
@@ -146,39 +97,39 @@ mod tests {
         }
 
         Robot::build(NullChat, Memory::new())
-            .route(Route::new(Regex::new(r".*").unwrap(), "welcome.back", WelcomeBack))
+            .route(Route::new(
+                Regex::new(r".*").unwrap(),
+                "welcome.back",
+                WelcomeBack,
+            ))
             .finish();
     }
 
     #[test]
     fn fn_stateful_callback() {
-        fn welcome_back<S>(handle: Handle<S>) -> FutureActionStream
+        fn welcome_back<C, S>(chat: Arc<C>, message: &IncomingMessage, store: S) -> CallbackFuture
         where
+            C: ChatService + 'static,
             S: Store,
         {
-            let id = handle.user().id().to_owned();
+            let message = message.clone();
+            let id = message.user().id().to_owned();
 
             let future = async move {
-                match await!(handle.get(&id)) {
+                match await!(store.get(&id)) {
                     Ok(Some(id)) => {
-                        let reply = handle.reply(format!(
+                        chat.send_message(message.reply(format!(
                             "Hello again, {}!",
-                            handle.user().name().unwrap_or(&id)
-                        ));
-                        let stream = reply.into();
+                            message.user().name().unwrap_or(&id)
+                        )));
 
-                        Ok(stream)
+                        Ok(())
                     }
-                    Ok(None) => {
-                        if let Err(_) = await!(handle.set(id, "1")) {
-                            panic!("store error");
-                        }
-
-                        let stream = Action::empty_stream();
-
-                        Ok(stream)
-                    }
-                    Err(_) => panic!("store error"),
+                    Ok(None) => match await!(store.set(id, "1")) {
+                        Ok(_) => Ok(()),
+                        Err(_) => Err(Error),
+                    },
+                    Err(_) => Err(Error),
                 }
             };
 
@@ -186,7 +137,11 @@ mod tests {
         }
 
         Robot::build(NullChat, Memory::new())
-            .route(Route::new(Regex::new(r".*").unwrap(), "welcome.back", welcome_back))
+            .route(Route::new(
+                Regex::new(r".*").unwrap(),
+                "welcome.back",
+                welcome_back,
+            ))
             .finish();
     }
 }
