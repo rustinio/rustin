@@ -12,13 +12,14 @@ use crate::{
     store::Store,
 };
 
-/// A route is a regular expression to match against incoming messages and a callback to call when
-/// a match is found.
+/// A route determines whether or not to invoke a callback by matching incoming messages against a
+/// set of criteria.
 pub struct Route<C, S>
 where
     C: ChatService,
 {
     callback: Box<dyn Callback<C, S>>,
+    eavesdrop: bool,
     namespace: &'static str,
     pattern: Regex,
 }
@@ -32,7 +33,7 @@ where
     /// # Errors
     ///
     /// Returns an error if the provided pattern can't be turned into a regular expression.
-    pub fn new<Cbk>(pattern: &str, namespace: &'static str, callback: Cbk) -> Result<Self, Error>
+    pub fn new<Cbk>(pattern: &str, eavesdrop: bool, namespace: &'static str, callback: Cbk) -> Result<Self, Error>
     where
         Cbk: Callback<C, S> + 'static,
     {
@@ -40,19 +41,27 @@ where
 
         Ok(Route {
             callback: Box::new(callback),
+            eavesdrop,
             namespace,
             pattern: regex,
         })
     }
 
-    /// The route's regular expression.
-    pub fn pattern(&self) -> &Regex {
-        &self.pattern
+    /// Whether or not the robot should "eavesdrop" to look for this message.
+    ///
+    /// When `true`, the message does not need to be directed to the robot by name or alias.
+    pub fn eavesdrop(&self) -> bool {
+        self.eavesdrop
     }
 
     /// The namespace to use for any data persisted within the callback.
     pub fn namespace(&self) -> &'static str {
         self.namespace
+    }
+
+    /// The route's regular expression.
+    pub fn pattern(&self) -> &Regex {
+        &self.pattern
     }
 }
 

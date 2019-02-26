@@ -82,7 +82,7 @@ mod tests {
         }
 
         Robot::build(NullChat, Memory::new())
-            .route(Route::new(r".*", "welcome.back", WelcomeBack).unwrap())
+            .route(Route::new(r".*", true, "welcome.back", WelcomeBack).unwrap())
             .finish();
     }
 
@@ -118,7 +118,7 @@ mod tests {
         }
 
         Robot::build(NullChat, Memory::new())
-            .route(Route::new(r".*", "welcome.back", welcome_back).unwrap())
+            .route(Route::new(r".*", true, "welcome.back", welcome_back).unwrap())
             .finish();
     }
 }
