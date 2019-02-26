@@ -4,13 +4,9 @@ use futures::executor::block_on;
 use regex::Regex;
 
 use rustin::{
-    chat_service::{ChatService, Shell},
+    chat_service::Shell,
+    prelude::*,
     store::Memory,
-    IncomingMessage,
-    Robot,
-    Route,
-    Store,
-    Success,
 };
 
 fn echo<C, S>(chat_service: Arc<C>, message: &IncomingMessage, _store: S) -> Success

@@ -7,23 +7,13 @@ mod callback;
 pub mod chat_service;
 mod config;
 pub mod message;
+pub mod prelude;
 mod result;
 mod robot;
 pub mod room;
 mod route;
 pub mod store;
 pub mod user;
-
-pub use crate::{
-    callback::Callback,
-    chat_service::ChatService,
-    config::Config,
-    message::IncomingMessage,
-    result::{Error, Success},
-    robot::Robot,
-    route::Route,
-    store::Store,
-};
 
 #[cfg(test)]
 mod tests {
@@ -34,13 +24,10 @@ mod tests {
     use futures::{future::ok, stream::empty};
 
     use super::{
-        callback::Callback,
-        chat_service::{ChatService, Incoming},
-        message::{IncomingMessage, OutgoingMessage},
-        result::{Error, Success},
-        robot::Robot,
-        route::Route,
-        store::{Memory, Store},
+        chat_service::Incoming,
+        message::OutgoingMessage,
+        prelude::*,
+        store::Memory,
         user::User,
     };
 
