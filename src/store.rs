@@ -60,7 +60,7 @@ impl Store for Memory {
     {
         let future = match self.data.read() {
             Ok(data) => ok(data.get(key.as_ref()).map(|value| value.clone())),
-            Err(_) => err(Error),
+            Err(error) => err(Error::custom(error.to_string())),
         };
 
         Box::pin(future)
@@ -77,7 +77,7 @@ impl Store for Memory {
 
                 ok(())
             }
-            Err(_) => err(Error),
+            Err(error) => err(Error::custom(error.to_string())),
         };
 
         Box::pin(future)

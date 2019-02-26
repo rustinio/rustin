@@ -1,13 +1,8 @@
 use std::sync::Arc;
 
 use futures::executor::block_on;
-use regex::Regex;
 
-use rustin::{
-    chat_service::Shell,
-    prelude::*,
-    store::Memory,
-};
+use rustin::{chat_service::Shell, prelude::*, store::Memory};
 
 fn echo<C, S>(chat_service: Arc<C>, message: &IncomingMessage, _store: S) -> Success
 where
@@ -20,10 +15,10 @@ where
     chat_service.send_message(reply)
 }
 
-fn main() -> Result<(), regex::Error> {
+fn main() -> Result<(), Error> {
     let chat_service = Shell::default();
     let store = Memory::new();
-    let echo_route = Route::new(Regex::new(r".*")?, "echo", echo);
+    let echo_route = Route::new(r".*", "echo", echo)?;
     let robot = Robot::build(chat_service, store).route(echo_route).finish();
 
     if let Err(error) = block_on(robot.run()) {

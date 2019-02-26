@@ -3,23 +3,21 @@
 #![deny(missing_docs)]
 #![feature(arbitrary_self_types, async_await, await_macro, futures_api)]
 
-mod callback;
+pub mod callback;
 pub mod chat_service;
-mod config;
+pub mod config;
 pub mod message;
 pub mod prelude;
-mod result;
-mod robot;
+pub mod result;
+pub mod robot;
 pub mod room;
-mod route;
+pub mod route;
 pub mod store;
 pub mod user;
 
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
-
-    use regex::Regex;
 
     use futures::{future::ok, stream::empty};
 
@@ -73,9 +71,9 @@ mod tests {
                         }
                         Ok(None) => match await!(store.set(id, "1")) {
                             Ok(_) => Ok(()),
-                            Err(_) => Err(Error),
+                            Err(error) => Err(Error::custom(error.to_string())),
                         },
-                        Err(_) => Err(Error),
+                        Err(error) => Err(Error::custom(error.to_string())),
                     }
                 };
 
@@ -84,11 +82,7 @@ mod tests {
         }
 
         Robot::build(NullChat, Memory::new())
-            .route(Route::new(
-                Regex::new(r".*").unwrap(),
-                "welcome.back",
-                WelcomeBack,
-            ))
+            .route(Route::new(r".*", "welcome.back", WelcomeBack).unwrap())
             .finish();
     }
 
@@ -114,9 +108,9 @@ mod tests {
                     }
                     Ok(None) => match await!(store.set(id, "1")) {
                         Ok(_) => Ok(()),
-                        Err(_) => Err(Error),
+                        Err(error) => Err(Error::custom(error.to_string())),
                     },
-                    Err(_) => Err(Error),
+                    Err(error) => Err(Error::custom(error.to_string())),
                 }
             };
 
@@ -124,11 +118,7 @@ mod tests {
         }
 
         Robot::build(NullChat, Memory::new())
-            .route(Route::new(
-                Regex::new(r".*").unwrap(),
-                "welcome.back",
-                welcome_back,
-            ))
+            .route(Route::new(r".*", "welcome.back", welcome_back).unwrap())
             .finish();
     }
 }

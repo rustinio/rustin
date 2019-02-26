@@ -8,6 +8,7 @@ use crate::{
     callback::{Callback, CallbackFuture},
     chat_service::ChatService,
     message::IncomingMessage,
+    result::Error,
     store::Store,
 };
 
@@ -27,15 +28,21 @@ where
     C: ChatService,
 {
     /// Constructs a new `Route`.
-    pub fn new<Cbk>(pattern: Regex, namespace: &'static str, callback: Cbk) -> Self
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the provided pattern can't be turned into a regular expression.
+    pub fn new<Cbk>(pattern: &str, namespace: &'static str, callback: Cbk) -> Result<Self, Error>
     where
         Cbk: Callback<C, S> + 'static,
     {
-        Route {
+        let regex = Regex::new(pattern)?;
+
+        Ok(Route {
             callback: Box::new(callback),
             namespace,
-            pattern,
-        }
+            pattern: regex,
+        })
     }
 
     /// The route's regular expression.

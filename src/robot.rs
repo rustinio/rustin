@@ -1,3 +1,5 @@
+//! The `Robot` type, which drives Rustin's runtime.
+
 use std::sync::Arc;
 
 use futures::stream::StreamExt;
@@ -9,6 +11,7 @@ use crate::{
     route::Route,
     store::Store,
 };
+
 /// A builder for configuring a new `Robot`.
 pub struct Builder<C, S>
 where
