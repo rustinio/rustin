@@ -4,7 +4,7 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
-use crate::{error::Error, message::IncomingMessage, store::Store};
+use crate::{message::IncomingMessage, result::Error, store::Store};
 
 /// A callback that receives incoming messages and reacts to them however it wishes.
 pub trait Callback<C, S> {

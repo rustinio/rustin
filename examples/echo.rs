@@ -5,15 +5,15 @@ use regex::Regex;
 
 use rustin::{
     chat_service::{ChatService, Shell},
-    message::IncomingMessage,
     store::Memory,
-    CallbackFuture,
+    IncomingMessage,
     Robot,
     Route,
     Store,
+    Success,
 };
 
-fn echo<C, S>(chat_service: Arc<C>, message: &IncomingMessage, _store: S) -> CallbackFuture
+fn echo<C, S>(chat_service: Arc<C>, message: &IncomingMessage, _store: S) -> Success
 where
     C: ChatService,
     S: Store,

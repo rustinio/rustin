@@ -5,7 +5,7 @@ use futures::stream::StreamExt;
 use crate::{
     callback::Callback,
     chat_service::ChatService,
-    error::Error,
+    result::Error,
     route::Route,
     store::Store,
 };

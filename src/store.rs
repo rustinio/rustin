@@ -9,7 +9,7 @@ use std::sync::{Arc, RwLock};
 
 use futures::future::{err, ok};
 
-use crate::error::Error;
+use crate::result::Error;
 
 /// Persistent data storage for the robot.
 pub trait Store: Clone + Send + Sync + 'static {

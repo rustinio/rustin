@@ -6,23 +6,23 @@
 mod callback;
 pub mod chat_service;
 mod config;
-mod error;
 pub mod message;
+mod result;
 mod robot;
-mod room;
+pub mod room;
 mod route;
 pub mod store;
-mod user;
+pub mod user;
 
 pub use crate::{
-    callback::{Callback, CallbackFuture},
+    callback::Callback,
+    chat_service::ChatService,
     config::Config,
-    error::Error,
-    robot::{Builder, Robot},
-    room::Room,
+    message::IncomingMessage,
+    result::{Error, Success},
+    robot::Robot,
     route::Route,
     store::Store,
-    user::User,
 };
 
 #[cfg(test)]
@@ -34,10 +34,10 @@ mod tests {
     use futures::{future::ok, stream::empty};
 
     use super::{
-        callback::{Callback, CallbackFuture},
-        chat_service::{ChatService, Incoming, Success},
-        error::Error,
+        callback::Callback,
+        chat_service::{ChatService, Incoming},
         message::{IncomingMessage, OutgoingMessage},
+        result::{Error, Success},
         robot::Robot,
         route::Route,
         store::{Memory, Store},
@@ -70,7 +70,7 @@ mod tests {
             C: ChatService + 'static,
             S: Store,
         {
-            fn call(&self, chat: Arc<C>, message: &IncomingMessage, store: S) -> CallbackFuture {
+            fn call(&self, chat: Arc<C>, message: &IncomingMessage, store: S) -> Success {
                 let message = message.clone();
                 let id = message.user().id().to_owned();
 
@@ -107,7 +107,7 @@ mod tests {
 
     #[test]
     fn fn_stateful_callback() {
-        fn welcome_back<C, S>(chat: Arc<C>, message: &IncomingMessage, store: S) -> CallbackFuture
+        fn welcome_back<C, S>(chat: Arc<C>, message: &IncomingMessage, store: S) -> Success
         where
             C: ChatService + 'static,
             S: Store,

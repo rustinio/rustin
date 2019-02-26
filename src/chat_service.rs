@@ -2,10 +2,10 @@
 
 use std::pin::Pin;
 
-use futures::{Future, Stream};
+use futures::Stream;
 
-use crate::error::Error;
 use crate::message::{IncomingMessage, OutgoingMessage};
+use crate::result::{Error, Success};
 use crate::room::Room;
 use crate::user::User;
 
@@ -39,9 +39,6 @@ pub trait MultiRoomChatService: ChatService {
     /// Makes Rustin part from a chat room.
     fn part(&self, room: &Room) -> Success;
 }
-
-/// A type indicating a successful operation with the chat service that has no meaningful return value.
-pub type Success = Pin<Box<dyn Future<Output = Result<(), Error>>>>;
 
 /// An asynchronous stream of incoming messages.
 pub type Incoming = Pin<Box<dyn Stream<Item = Result<IncomingMessage, Error>>>>;

@@ -2,12 +2,14 @@ use std::io::{self, BufRead, Write};
 use std::thread;
 use std::time::Duration;
 
-use futures::channel::mpsc::channel;
-use futures::future::ok;
+use futures::{channel::mpsc::channel, future::ok};
 
-use super::{ChatService, Incoming, Success};
-use crate::message::{IncomingMessage, OutgoingMessage, Source};
-use crate::user::User;
+use super::{ChatService, Incoming};
+use crate::{
+    message::{IncomingMessage, OutgoingMessage, Source},
+    result::Success,
+    user::User,
+};
 
 /// An adapter that runs in your shell.
 #[derive(Clone, Debug)]
