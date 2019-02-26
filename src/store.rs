@@ -30,9 +30,9 @@ pub trait Store: Clone + Send + Sync + 'static {
     where
         P: Into<String>,
         Self: Sized;
-    /// Returns the character used to seperate each nested scope created by `scoped`.
-    fn seperator(&self) -> char {
-        '.'
+    /// Returns the text used to separate each nested scope created by `scoped`.
+    fn separator(&self) -> &'static str {
+        ":"
     }
 }
 
@@ -130,7 +130,7 @@ where
     where
         K: AsRef<str> + Display,
     {
-        let key = format!("{}{}{}", self.prefix, self.parent.seperator(), key);
+        let key = format!("{}{}{}", self.prefix, self.parent.separator(), key);
 
         self.parent.get(key)
     }
@@ -140,7 +140,7 @@ where
         K: Display + Into<String>,
         V: Into<String>,
     {
-        let key = format!("{}{}{}", self.prefix, self.parent.seperator(), key);
+        let key = format!("{}{}{}", self.prefix, self.parent.separator(), key);
 
         self.parent.set(key, value)
     }
@@ -156,7 +156,7 @@ where
         }
     }
 
-    fn seperator(&self) -> char {
-        self.parent.seperator()
+    fn separator(&self) -> &'static str {
+        self.parent.separator()
     }
 }
