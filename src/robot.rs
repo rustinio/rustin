@@ -77,7 +77,7 @@ where
 
     /// Starts the robot, connecting to the chat service and listening for incoming messages.
     pub async fn run(self) -> Result<(), Error> {
-        let mut incoming_messages = self.chat_service.incoming();
+        let mut incoming_messages = self.chat_service.incoming(self.config.alias);
 
         while let Some(Ok(message)) = await!(StreamExt::next(&mut incoming_messages)) {
             for route in &self.routes {

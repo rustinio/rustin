@@ -9,20 +9,32 @@ use crate::user::User;
 #[derive(Clone, Debug)]
 pub struct IncomingMessage {
     body: String,
+    mention_offset: usize,
     source: Source,
 }
 
 impl IncomingMessage {
     /// Creates a new `IncomingMessage`.
-    pub fn new(source: Source, body: String) -> Self {
+    pub fn new(source: Source, body: String, mention_offset: usize) -> Self {
         IncomingMessage {
             body,
+            mention_offset,
             source: source,
         }
     }
 
     /// The body of the message.
+    ///
+    /// If the message began with a mention of the robot, it is removed from the body of the
+    /// message. To get the full, unaltered message body, use `raw_body` instead.
     pub fn body(&self) -> &str {
+        &self.body[self.mention_offset..]
+    }
+
+    /// The body of the message exactly as it was received from the chat service.
+    ///
+    /// To get the body with any initial mention of the robot removed, use `body` instead.
+    pub fn raw_body(&self) -> &str {
         &self.body
     }
 

@@ -5,6 +5,7 @@ use std::thread;
 use std::time::Duration;
 
 use futures::{channel::mpsc::channel, executor::block_on, future::ok};
+use regex::{escape, Regex};
 
 use super::{ChatService, Incoming};
 use crate::{
@@ -26,6 +27,15 @@ impl Shell {
             user: User::new("1", Some(name), None),
         }
     }
+
+    fn mention_regex(&self, alias: Option<String>) -> Regex {
+        let escaped_username = escape(self.user.username().expect("acessing robot username"));
+        let mut pattern = format!("(?i)\\A\\s*{}", escaped_username);
+        if let Some(alias) = alias {
+            pattern.push_str(&format!("|{}", escape(&alias)));
+        }
+        Regex::new(&pattern).expect("creating mention regex")
+    }
 }
 
 impl Default for Shell {
@@ -43,8 +53,9 @@ impl ChatService for Shell {
         Box::pin(ok(()))
     }
 
-    fn incoming(&self) -> Incoming {
+    fn incoming(&self, alias: Option<String>) -> Incoming {
         let (mut tx, rx) = channel(0);
+        let mention_regex = self.mention_regex(alias);
         let robot = block_on(self.user()).expect("accessing robot user");
         let prompt = format!("{} > ", robot.username().expect("accessing username"));
 
@@ -72,9 +83,14 @@ impl ChatService for Shell {
                             break;
                         }
 
+                        let content_offset = match mention_regex.find(&body) {
+                            Some(regex_match) => regex_match.end(),
+                            None => 0,
+                        };
+
                         let user = User::new("1", Some("Shell User"), None);
                         let source = Source::User(user);
-                        let message = IncomingMessage::new(source, body);
+                        let message = IncomingMessage::new(source, body, content_offset);
 
                         match tx.try_send(Ok(message)) {
                             Ok(_) => {

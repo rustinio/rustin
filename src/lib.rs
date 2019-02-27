@@ -40,7 +40,7 @@ mod tests {
             Box::pin(ok(()))
         }
 
-        fn incoming(&self) -> Incoming {
+        fn incoming(&self, _alias: Option<String>) -> Incoming {
             Box::pin(empty())
         }
 

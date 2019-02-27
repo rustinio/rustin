@@ -23,7 +23,7 @@ pub trait ChatService {
     fn send_message(&self, message: OutgoingMessage) -> Success;
 
     /// Connects to the chat service and listens for incoming messages.
-    fn incoming(&self) -> Incoming;
+    fn incoming(&self, alias: Option<String>) -> Incoming;
 
     /// Returns a `User` representing the robot.
     ///
