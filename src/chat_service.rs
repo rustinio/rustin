@@ -1,5 +1,6 @@
 //! Types for connecting Rustin to a chat service.
 
+use std::future::Future;
 use std::pin::Pin;
 
 use futures::Stream;
@@ -28,7 +29,7 @@ pub trait ChatService {
     ///
     /// May be absent if not applicable or if called before the robot has connected to the chat
     /// service and retrieved data about itself.
-    fn user(&self) -> Option<&User>;
+    fn user(&self) -> Pin<Box<dyn Future<Output = Result<User, Error>>>>;
 }
 
 /// A `ChatService` that supports joining and parting from multiple rooms.

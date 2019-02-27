@@ -1,13 +1,15 @@
+use std::future::Future;
 use std::io::{self, BufRead, Write};
+use std::pin::Pin;
 use std::thread;
 use std::time::Duration;
 
-use futures::{channel::mpsc::channel, future::ok};
+use futures::{channel::mpsc::channel, executor::block_on, future::ok};
 
 use super::{ChatService, Incoming};
 use crate::{
     message::{IncomingMessage, OutgoingMessage, Source},
-    result::Success,
+    result::{Error, Success},
     user::User,
 };
 
@@ -43,7 +45,7 @@ impl ChatService for Shell {
 
     fn incoming(&self) -> Incoming {
         let (mut tx, rx) = channel(0);
-        let robot = self.user().expect("accessing robot user");
+        let robot = block_on(self.user()).expect("accessing robot user");
         let prompt = format!("{} > ", robot.username().expect("accessing username"));
 
         thread::spawn(move || {
@@ -98,7 +100,7 @@ impl ChatService for Shell {
         Box::pin(rx)
     }
 
-    fn user(&self) -> Option<&User> {
-        Some(&self.user)
+    fn user(&self) -> Pin<Box<dyn Future<Output = Result<User, Error>>>> {
+        Box::pin(ok(self.user.clone()))
     }
 }

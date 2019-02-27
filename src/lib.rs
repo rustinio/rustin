@@ -17,9 +17,12 @@ pub mod user;
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
+    use std::{pin::Pin, sync::Arc};
 
-    use futures::{future::ok, stream::empty};
+    use futures::{
+        future::{ok, Future},
+        stream::empty,
+    };
 
     use super::{
         chat_service::Incoming,
@@ -41,8 +44,8 @@ mod tests {
             Box::pin(empty())
         }
 
-        fn user(&self) -> Option<&User> {
-            None
+        fn user(&self) -> Pin<Box<dyn Future<Output = Result<User, Error>>>> {
+            Box::pin(ok(User::new("null", None, None)))
         }
     }
 
