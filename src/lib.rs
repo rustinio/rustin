@@ -64,7 +64,7 @@ mod tests {
                         Ok(Some(id)) => {
                             chat.send_message(message.reply(format!(
                                 "Hello again, {}!",
-                                message.user().name().unwrap_or(&id)
+                                message.user().display_name().unwrap_or(&id)
                             )));
 
                             Ok(())
@@ -101,7 +101,7 @@ mod tests {
                     Ok(Some(id)) => {
                         chat.send_message(message.reply(format!(
                             "Hello again, {}!",
-                            message.user().name().unwrap_or(&id)
+                            message.user().display_name().unwrap_or(&id)
                         )));
 
                         Ok(())

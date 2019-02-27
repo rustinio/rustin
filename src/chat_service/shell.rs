@@ -19,12 +19,9 @@ pub struct Shell {
 
 impl Shell {
     /// Creates a new `Shell` with the given name for the robot.
-    pub fn new<N>(name: N) -> Self
-    where
-        N: Into<String>,
-    {
+    pub fn new(name: &str) -> Self {
         Shell {
-            user: User::new("1", Some(name)),
+            user: User::new("1", Some(name), None),
         }
     }
 }
@@ -32,7 +29,7 @@ impl Shell {
 impl Default for Shell {
     fn default() -> Self {
         Shell {
-            user: User::new("1", Some("Rustin")),
+            user: User::new("1", Some("Rustin"), None),
         }
     }
 }
@@ -47,7 +44,7 @@ impl ChatService for Shell {
     fn incoming(&self) -> Incoming {
         let (mut tx, rx) = channel(0);
         let robot = self.user().expect("accessing robot user");
-        let prompt = format!("{} > ", robot.name().expect("accessing user name"));
+        let prompt = format!("{} > ", robot.username().expect("accessing username"));
 
         thread::spawn(move || {
             let input = io::stdin();
@@ -73,7 +70,7 @@ impl ChatService for Shell {
                             break;
                         }
 
-                        let user = User::new("1", Some("Shell User"));
+                        let user = User::new("1", Some("Shell User"), None);
                         let source = Source::User(user);
                         let message = IncomingMessage::new(source, body);
 
