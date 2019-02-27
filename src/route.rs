@@ -33,7 +33,12 @@ where
     /// # Errors
     ///
     /// Returns an error if the provided pattern can't be turned into a regular expression.
-    pub fn new<Cbk>(pattern: &str, eavesdrop: bool, namespace: &'static str, callback: Cbk) -> Result<Self, Error>
+    pub fn new<Cbk>(
+        pattern: &str,
+        eavesdrop: bool,
+        namespace: &'static str,
+        callback: Cbk,
+    ) -> Result<Self, Error>
     where
         Cbk: Callback<C, S> + 'static,
     {

@@ -41,7 +41,10 @@ impl User {
     /// This value may be the same as `id` for services that do not distinguish between ID and
     /// username.
     pub fn username(&self) -> Option<&str> {
-        self.username.as_ref().map(String::as_str).or(Some(self.id()))
+        self.username
+            .as_ref()
+            .map(String::as_str)
+            .or(Some(self.id()))
     }
 
     /// A human-readable name for the user.
@@ -49,6 +52,9 @@ impl User {
     /// This value may be the same as `username` for services that do not distinguish between
     /// username and display name.
     pub fn display_name(&self) -> Option<&str> {
-        self.display_name.as_ref().map(String::as_str).or(self.username())
+        self.display_name
+            .as_ref()
+            .map(String::as_str)
+            .or(self.username())
     }
 }
