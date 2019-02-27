@@ -84,7 +84,7 @@ mod tests {
             }
         }
 
-        Robot::build(NullChat, Memory::new())
+        Robot::build(Config::default(), NullChat, Memory::new())
             .route(Route::new(r".*", true, "welcome.back", WelcomeBack).unwrap())
             .finish();
     }
@@ -120,7 +120,7 @@ mod tests {
             Box::pin(future)
         }
 
-        Robot::build(NullChat, Memory::new())
+        Robot::build(Config::default(), NullChat, Memory::new())
             .route(Route::new(r".*", true, "welcome.back", welcome_back).unwrap())
             .finish();
     }

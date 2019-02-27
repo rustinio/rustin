@@ -7,6 +7,7 @@ use futures::stream::StreamExt;
 use crate::{
     callback::Callback,
     chat_service::ChatService,
+    config::Config,
     result::Error,
     route::Route,
     store::Store,
@@ -19,6 +20,7 @@ where
     S: Store,
 {
     chat_service: C,
+    config: Config,
     routes: Vec<Route<C, S>>,
     store: S,
 }
@@ -39,6 +41,7 @@ where {
     pub fn finish(self) -> Robot<C, S> {
         Robot {
             chat_service: Arc::new(self.chat_service),
+            config: self.config,
             routes: self.routes,
             store: self.store,
         }
@@ -52,6 +55,7 @@ where
     S: Store,
 {
     chat_service: Arc<C>,
+    config: Config,
     routes: Vec<Route<C, S>>,
     store: S,
 }
@@ -62,9 +66,10 @@ where
     S: Store,
 {
     /// Begins constructing a `Robot`.
-    pub fn build(chat_service: C, store: S) -> Builder<C, S> {
+    pub fn build(config: Config, chat_service: C, store: S) -> Builder<C, S> {
         Builder {
             chat_service,
+            config,
             routes: Vec::new(),
             store,
         }
