@@ -1,7 +1,6 @@
 //! Crate `rustin` is an extensible chat bot framework.
 
 #![deny(missing_docs)]
-#![feature(arbitrary_self_types, async_await, await_macro, futures_api)]
 
 pub mod callback;
 pub mod chat_service;
@@ -63,7 +62,7 @@ mod tests {
                 let id = message.user().id().to_owned();
 
                 let future = async move {
-                    match await!(store.get(&id)) {
+                    match store.get(&id).await {
                         Ok(Some(id)) => {
                             chat.send_message(message.reply(format!(
                                 "Hello again, {}!",
@@ -72,7 +71,7 @@ mod tests {
 
                             Ok(())
                         }
-                        Ok(None) => match await!(store.set(id, "1")) {
+                        Ok(None) => match store.set(id, "1").await {
                             Ok(_) => Ok(()),
                             Err(error) => Err(Error::custom(error.to_string())),
                         },
@@ -100,7 +99,7 @@ mod tests {
             let id = message.user().id().to_owned();
 
             let future = async move {
-                match await!(store.get(&id)) {
+                match store.get(&id).await {
                     Ok(Some(id)) => {
                         chat.send_message(message.reply(format!(
                             "Hello again, {}!",
@@ -109,7 +108,7 @@ mod tests {
 
                         Ok(())
                     }
-                    Ok(None) => match await!(store.set(id, "1")) {
+                    Ok(None) => match store.set(id, "1").await {
                         Ok(_) => Ok(()),
                         Err(error) => Err(Error::custom(error.to_string())),
                     },

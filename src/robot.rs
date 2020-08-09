@@ -79,9 +79,9 @@ where
     pub async fn run(self) -> Result<(), Error> {
         let mut incoming_messages = self.chat_service.incoming(self.config.alias);
 
-        while let Some(Ok(message)) = await!(StreamExt::next(&mut incoming_messages)) {
+        while let Some(Ok(message)) = StreamExt::next(&mut incoming_messages).await {
             for route in &self.routes {
-                await!(route.call(self.chat_service.clone(), &message, self.store.clone()))?
+                route.call(self.chat_service.clone(), &message, self.store.clone()).await?
             }
         }
 
